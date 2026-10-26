@@ -54,10 +54,10 @@ export function Landing() {
   const templates = React.useMemo(() => getTemplates(), []);
   const hero = React.useMemo(() => templates.find((t) => t.id === 'bold-statement--prism--16x9') ?? templates[0], [templates]);
   const showcase = React.useMemo(() => [
-    templates.find((t) => t.id.startsWith('album-art--electric-violet')),
-    templates.find((t) => t.id.startsWith('magazine-cover--editorial')),
-    templates.find((t) => t.id.startsWith('kinetic-title--prism')),
-    templates.find((t) => t.id.startsWith('cta-story--neo-candy')),
+    templates.find((t) => t.id === 'mg-kinetic-swiss--0--16x9'),
+    templates.find((t) => t.id === 'dt-promo-slab--0--1x1'),
+    templates.find((t) => t.id === 'dt-editorial-quote--1--4x5'),
+    templates.find((t) => t.id === 'mg-neon-cyber--0--16x9'),
   ].filter(Boolean) as typeof templates, [templates]);
   const heroProject = React.useMemo(() => (hero ? { ...hero.render(), duration: hero.duration } : null), [hero]);
 
@@ -306,8 +306,8 @@ export function Landing() {
           <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
             <div>
               <Badge variant="secondary" className="mb-3 text-[10px]">Templates</Badge>
-              <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">Start from 580+ editable scenes.</h2>
-              <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">22 design families × 12 palettes × aspect ratios. Every template is a real layer tree — nothing is flattened.</p>
+              <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">Start from {templates.length} editable scenes.</h2>
+              <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">Design families, colourways and aspect ratios — including 14 long-form motion styles cut between 18 and 30 seconds. Every template is a real, keyframed layer tree; nothing is flattened.</p>
             </div>
             <Link href="/editor?panel=templates"><Button variant="outline" size="sm" className="gap-1.5">Browse all <ArrowRight className="h-3.5 w-3.5" /></Button></Link>
           </div>
@@ -316,7 +316,7 @@ export function Landing() {
               const p = t.render();
               return (
                 <motion.div key={t.id} initial={reduce ? undefined : { opacity: 0, scale: 0.97 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.06 }} className="group overflow-hidden rounded-xl border border-border/70 bg-card/60">
-                  <div className="aspect-[4/5] w-full overflow-hidden bg-black/40"><SceneCanvas project={{ ...p, duration: t.duration }} playing={i === 0} /></div>
+                  <div className="aspect-[4/5] w-full overflow-hidden bg-black/40"><SceneCanvas project={{ ...p, duration: t.duration }} playing={i === 0 && t.duration >= 12} /></div>
                   <div className="flex items-center justify-between px-3 py-2"><span className="truncate text-[11px] text-muted-foreground">{t.name}</span><span className="text-[9px] uppercase tracking-wider text-muted-foreground/50">{t.aspect}</span></div>
                 </motion.div>
               );

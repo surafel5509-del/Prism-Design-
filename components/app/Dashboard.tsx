@@ -127,7 +127,7 @@ export function Dashboard() {
   return (
     <AppShell
       title={tab === 'projects' ? 'Your studio' : tab === 'templates' ? 'Templates' : tab === 'brand' ? 'Brand kits' : 'Activity'}
-      subtitle={tab === 'projects' ? `${projects?.length ?? 0} projects · autosaved locally and to your cloud library` : tab === 'templates' ? '1,000+ designs · one click to a real, editable document' : tab === 'brand' ? 'Design systems that flow into every project and agent brief' : 'Agent runs, models and spend'}
+      subtitle={tab === 'projects' ? `${projects?.length ?? 0} projects · autosaved locally and to your cloud library` : tab === 'templates' ? `${getTemplates().length} designs & motion films · one click to a real, editable document` : tab === 'brand' ? 'Design systems that flow into every project and agent brief' : 'Agent runs, models and spend'}
       actions={
         <div className="hidden items-center gap-1.5 md:flex">
           <div className="relative">
