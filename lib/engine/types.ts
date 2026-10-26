@@ -38,7 +38,9 @@ export type Keyframes = Partial<Record<AnimatableProp, Keyframe[]>>;
 export type LayerType = 'shape' | 'text' | 'image' | 'video' | 'audio' | 'group' | 'path' | 'lottie' | 'particles';
 
 export type ShapeKind =
-  | 'rect' | 'roundedRect' | 'ellipse' | 'polygon' | 'star' | 'line' | 'arrow' | 'triangle' | 'diamond' | 'hexagon';
+  | 'rect' | 'roundedRect' | 'ellipse' | 'polygon' | 'star' | 'line' | 'arrow' | 'triangle' | 'diamond' | 'hexagon'
+  | 'capsule' | 'squircle' | 'ring' | 'halfCircle' | 'quarterCircle' | 'chevron' | 'cross' | 'parallelogram'
+  | 'trapezoid' | 'burst' | 'heart' | 'cloud' | 'wave' | 'octagon' | 'pentagon' | 'pillArrow';
 
 export interface GradientStop { offset: number; color: string; opacity?: number }
 export interface Gradient {
@@ -50,7 +52,9 @@ export interface Gradient {
 export type EffectType =
   | 'blur' | 'glow' | 'shadow' | 'brightness' | 'contrast' | 'saturate' | 'hue'
   | 'grayscale' | 'sepia' | 'invert' | 'chromatic' | 'noise' | 'grain' | 'vignette'
-  | 'lightSweep' | 'pixelate' | 'bloom' | 'dropShadow' | 'displacement' | 'scanlines';
+  | 'lightSweep' | 'pixelate' | 'bloom' | 'dropShadow' | 'displacement' | 'scanlines'
+  | 'duotone' | 'hologram' | 'vhs' | 'halftone' | 'spotlight'
+  | 'thermal' | 'posterize' | 'wiggle' | 'drift' | 'beatPulse';
 
 export interface Effect {
   id: string;
@@ -58,6 +62,7 @@ export interface Effect {
   enabled: boolean;
   amount: number;
   color?: string;
+  color2?: string;
   x?: number;
   y?: number;
   blur?: number;
@@ -154,6 +159,8 @@ export interface Layer {
   startTime: number;
   endTime: number;
   mask?: Mask | null;
+  /** Manual painted alpha cut-out from the background remover (never automatic). */
+  cutout?: { src: string; mode: 'remove' | 'keep' } | null;
   motionPath?: MotionPath | null;
   particles?: ParticlesProps | null;
   meta?: Record<string, unknown>;

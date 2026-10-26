@@ -143,6 +143,8 @@ export function useAgentRun() {
             useAgent.getState().setAwaitingApproval(isApproval);
             emitAgentAction({ type: 'ask', kind: isApproval ? 'approval' : 'question', question: String(action.question), options: (action.options as string[]) ?? [], reason: action.reason as string | undefined });
             controller.abort();
+          } else if (action?.type === 'cutout') {
+            emitAgentAction({ type: 'cutout', layerId: String(action.layerId ?? '') });
           } else if (action?.type === 'preview') {
             emitAgentAction({ type: 'preview', autoplay: action.autoplay !== false });
           } else if (action?.type === 'export') {

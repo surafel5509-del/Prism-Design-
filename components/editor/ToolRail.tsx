@@ -10,6 +10,7 @@ import { LayoutTemplate as Collage, Layers, Image as ImageIcon, Sparkles } from 
 import {
   MousePointer2, Move, Hand, Square, PenTool, Type, ImagePlus, Film, AudioLines,
   ZoomIn, Shapes, Wand2, ChevronRight, Circle, Triangle, Star, Hexagon, Minus, ArrowRight, Diamond, RectangleHorizontal,
+  Squircle, Pill, Heart, Cloud, Cross, ChevronsRight, CircleDot, Moon, Sun, Donut, Octagon, Pentagon, Asterisk, Waves, Gem,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { createShape, createText, gradient } from '@/lib/engine/factory';
@@ -26,6 +27,22 @@ const SHAPES: { kind: ShapeKind; label: string; icon: React.ComponentType<{ clas
   { kind: 'polygon', label: 'Polygon', icon: Hexagon },
   { kind: 'star', label: 'Star', icon: Star },
   { kind: 'diamond', label: 'Diamond', icon: Diamond },
+  { kind: 'octagon', label: 'Octagon', icon: Octagon },
+  { kind: 'pentagon', label: 'Pentagon', icon: Pentagon },
+  { kind: 'capsule', label: 'Capsule', icon: Pill },
+  { kind: 'squircle', label: 'Squircle', icon: Squircle },
+  { kind: 'ring', label: 'Ring', icon: Donut },
+  { kind: 'halfCircle', label: 'Half circle', icon: Moon },
+  { kind: 'quarterCircle', label: 'Quarter circle', icon: Sun },
+  { kind: 'chevron', label: 'Chevron', icon: ChevronsRight },
+  { kind: 'cross', label: 'Cross', icon: Cross },
+  { kind: 'parallelogram', label: 'Parallelogram', icon: Gem },
+  { kind: 'trapezoid', label: 'Trapezoid', icon: Square },
+  { kind: 'burst', label: 'Burst', icon: Asterisk },
+  { kind: 'heart', label: 'Heart', icon: Heart },
+  { kind: 'cloud', label: 'Cloud', icon: Cloud },
+  { kind: 'wave', label: 'Wave', icon: Waves },
+  { kind: 'pillArrow', label: 'Pill arrow', icon: ArrowRight },
   { kind: 'line', label: 'Line', icon: Minus },
   { kind: 'arrow', label: 'Arrow', icon: ArrowRight },
 ];
@@ -87,8 +104,8 @@ export function ToolRail() {
           </div>
         </PopoverTrigger>
         <PopoverContent side="right" align="start" className="w-[212px] p-2">
-          <p className="panel-title px-1 pb-1.5">Shapes</p>
-          <div className="grid grid-cols-4 gap-1">
+          <p className="panel-title flex items-center justify-between px-1 pb-1.5">Shapes <span className="text-[8.5px] font-normal text-muted-foreground">{SHAPES.length}</span></p>
+          <div className="grid max-h-[280px] grid-cols-4 gap-1 overflow-y-auto pr-1">
             {SHAPES.map((s) => (
               <button key={s.kind} onClick={() => { setShapeKind(s.kind); setTool('shape'); insertShape(s.kind); }}
                 title={s.label}

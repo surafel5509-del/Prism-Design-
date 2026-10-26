@@ -25,6 +25,8 @@ export function languageModel(cfg: RuntimeConfig): LanguageModelV1 {
       return createDeepSeek({ apiKey, baseURL })(cfg.model);
     case 'openrouter':
       return createOpenAI({ apiKey, baseURL: baseURL ?? 'https://openrouter.ai/api/v1', headers: OPENROUTER_HEADERS })(cfg.model);
+    case 'opencode':
+      return createOpenAICompatible({ name: 'opencode', apiKey, baseURL: baseURL ?? 'https://opencode.ai/inference/openai/v1', headers: { 'X-Title': 'Prism Studio' } })(cfg.model);
     case 'groq':
       return createOpenAICompatible({ name: 'groq', apiKey, baseURL: baseURL ?? 'https://api.groq.com/openai/v1' })(cfg.model);
     case 'together':

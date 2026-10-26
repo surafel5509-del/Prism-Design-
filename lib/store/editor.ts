@@ -55,6 +55,8 @@ interface EditorStore {
   previewOpen: boolean;
   exportOpen: boolean;
   shareOpen: boolean;
+  cutoutOpen: boolean;
+  cutoutLayerId: string | null;
   paletteOpen: boolean;
   onboardingStep: number | null;
   agentPreview: string | null;
@@ -109,6 +111,8 @@ interface EditorStore {
   setPreviewOpen: (v: boolean) => void;
   setExportOpen: (v: boolean) => void;
   setShareOpen: (v: boolean) => void;
+  openCutout: (id: string) => void;
+  setCutoutOpen: (v: boolean) => void;
   setPaletteOpen: (v: boolean) => void;
   setOnboardingStep: (v: number | null) => void;
   setAgentPreview: (v: string | null) => void;
@@ -203,6 +207,8 @@ export const useEditor = create<EditorStore>((set, get) => ({
   previewOpen: false,
   exportOpen: false,
   shareOpen: false,
+  cutoutOpen: false,
+  cutoutLayerId: null,
   paletteOpen: false,
   onboardingStep: null,
   agentPreview: null,
@@ -486,6 +492,8 @@ export const useEditor = create<EditorStore>((set, get) => ({
   setPreviewOpen: (v) => set({ previewOpen: v }),
   setExportOpen: (v) => set({ exportOpen: v }),
   setShareOpen: (v) => set({ shareOpen: v }),
+  openCutout: (id) => set({ cutoutOpen: true, cutoutLayerId: id }),
+  setCutoutOpen: (v) => set({ cutoutOpen: v, ...(v ? {} : { cutoutLayerId: null }) }),
   setPaletteOpen: (v) => set({ paletteOpen: v }),
   setOnboardingStep: (v) => set({ onboardingStep: v }),
   setAgentPreview: (v) => set({ agentPreview: v }),

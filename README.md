@@ -21,13 +21,17 @@ and every export** apply identically. There is no parallel fake path.
 
 - **Editor**: vector shapes, pen/bezier paths, rich text, images, video, audio, masks, groups, parenting,
   effects, blend modes, gradients, snapping, rulers, guides, boolean ops, multi-select and align/distribute.
+- **Cut-out studio**: manual, on-device background removal — paint what disappears, magic-wand by region,
+  colour key by picked colour or dominant swatch, feather, undo/redo, then apply live or bake a new layer.
 - **Motion**: multi-track timeline, keyframes on any animatable property, easing including spring/bounce/elastic,
   presets, transitions, particles, physics bake, image motion, audio sync, loop and ping-pong.
 - **Agent**: streams reasoning + tool calls, mutates the live document, pauses for approval, cancels cleanly,
   and ends with an inspectable run summary (steps, tools, tokens, cost, duration).
 - **BYO-AI**: 11 providers, AES-256-GCM encrypted at rest, server-side only, per-task routing, live model lists
   with curated fallback, real "Test connection".
-- **Studio**: dashboard with projects, 1,000+ templates, brand kits, activity, share links with comments,
+- **Stickers**: 200+ hand-drawn SVG stickers across 8 categories with instant search and colourways
+- **Studio**: dashboard with projects, 750+ templates (including 14 long-form 18–30 s motion families),
+  brand kits, activity, share links with comments,
   and `/s/<id>` viewer.
 
 ---
@@ -81,13 +85,18 @@ with a precise message instead of pretending.
 
 ### Canvas & design
 - Pure canvas-2D renderer (no Konva/Fabric/GSAP) — identical output in editor, preview, thumbnails, exports
-- Shapes: rect, rounded rect, ellipse, polygon, star, triangle, diamond, hexagon, line, arrow
+- Shapes (26): rect, rounded, ellipse, polygon, star, triangle, diamond, hexagon, capsule, squircle, ring,
+  half/quarter circle, chevron, cross, parallelogram, trapezoid, burst, heart, cloud, wave, octagon, pentagon,
+  pill-arrow, line, arrow
 - Pen & path editing, boolean operations (union/subtract/intersect/exclude), masks (rect/ellipse/gradient)
-- Typography: font stacks, weights, tracking, leading, case, gradients, stroke, text animators
-  (typewriter, word reveal, char rise, count-up)
+- Typography: 60 Google/display/script/mono families, weights, tracking, leading, case, gradients,
+  stroke, 18 one-click text styles (chrome, neon, holographic, 3D extrude, sticker cut, glitch, …) and
+  text animators (typewriter, word reveal, char rise, count-up)
 - Images and video with cover/contain, crop/radius, motion presets (Ken Burns, parallax, reveal, kinetic, 2.5D)
 - Gradients (linear/radial/conic), procedural backgrounds (mesh, grain, waves, orb, grid, blob, spotlight, duotone)
-- 50+ effects path: blur, glow, dropShadow, chromatic, grain, scanlines, light sweep, bloom, displacement, …
+- 31 stackable effects, each with a live animated thumbnail in the browser: blur, bloom, glow, shadows,
+  duotone, thermal, posterize, chromatic, grain, scanlines, halftone, hologram, VHS, light sweep, spotlight,
+  pixelate, displace, wiggle, drift, beat pulse, …
 - Blend modes, opacity, guides, snapping, rulers, safe areas, grid, zoom to fit/selection, multi-select
 
 ### Motion
@@ -153,7 +162,7 @@ lib/
   server/                  crypto · store · session · ai-config · ratelimit · generated · assets
   store/                   editor · agent · idb
   export/exporters.ts      PNG/JPG/SVG/PDF/GIF/WebM/MP4/Lottie pipelines
-  data/                    ~1,000 templates · icon & media library
+  data/                    750+ templates · motion/ · icon, sticker & media library
   hooks/                   use-ai · use-agent-run · use-playback · use-theme
 
 db/                        SQL migrations (Postgres / Supabase)

@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import {
   AlignCenter, History, Command as CommandIcon, Download, Eye, Grid3x3, Image as ImageIcon, Layers, LayoutTemplate, Moon,
   MousePointer2, PanelLeft, PenTool, Play, Plus, Redo2, Ruler, Search, Settings2, Share2, Shapes, Sparkles, Square, Sun,
-  Type, Undo2, Wand2, Zap,
+  Type, Undo2, Wand2, Zap, Scissors,
 } from 'lucide-react';
 import { useEditor } from '@/lib/store/editor';
 import { useAgent } from '@/lib/store/agent';
@@ -70,6 +70,7 @@ export function CommandPalette() {
       { id: 'export', label: 'Export project', group: 'Project', keys: ['⌘', 'E'], icon: <Download className="h-3.5 w-3.5" />, run: () => ed().setExportOpen(true) },
       { id: 'share', label: 'Share link', group: 'Project', icon: <Share2 className="h-3.5 w-3.5" />, run: () => ed().setShareOpen(true) },
       { id: 'theme', label: `Switch to ${resolved === 'dark' ? 'light' : 'dark'} theme`, group: 'App', icon: resolved === 'dark' ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />, run: () => setTheme(resolved === 'dark' ? 'light' : 'dark') },
+      { id: 'cutout', label: 'Remove background (manual cut-out)', group: 'Edit', hint: 'Brush or colour-pick what to erase', icon: <Scissors className="h-3.5 w-3.5" />, run: () => { const st = ed(); const id = st.selection[0] ?? st.project.layers.find((l) => l.type === 'image' && l.media?.src)?.id; if (id) st.openCutout(id); } },
       { id: 'history', label: 'Version history', group: 'Project', hint: 'Restore a snapshot', icon: <History className="h-3.5 w-3.5" />, run: () => window.dispatchEvent(new CustomEvent('prism:open-history')) },
       { id: 'settings', label: 'Open AI settings', group: 'App', icon: <Settings2 className="h-3.5 w-3.5" />, run: () => window.open('/settings/ai', '_blank') },
       { id: 'dashboard', label: 'Go to dashboard', group: 'App', icon: <LayoutTemplate className="h-3.5 w-3.5" />, run: () => { window.location.href = '/dashboard'; } },

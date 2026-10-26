@@ -2,6 +2,8 @@ import type { Aspect, Gradient, Keyframe, Layer, TemplateDef } from '@/lib/engin
 import type { Easing, ShapeKind, TextProps } from '@/lib/engine/types';
 import { PALETTES, createLayer, createShape, createText, gradient } from '@/lib/engine/factory';
 import { uid } from '@/lib/utils';
+import { getMotionTemplates } from './motion-templates';
+import { getDesignTemplates } from './design-templates';
 
 // ── helpers ──────────────────────────────────────────────────────────────
 type Box = [number, number, number, number];
@@ -527,6 +529,8 @@ export function getTemplates(): TemplateDef[] {
       }
     }
   }
+  out.push(...getDesignTemplates());
+  out.push(...getMotionTemplates());
   cache = out;
   return out;
 }

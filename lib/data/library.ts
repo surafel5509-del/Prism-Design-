@@ -86,6 +86,7 @@ function stickerSvg(color: string, inner: string) {
 }
 
 export const FONTS = [
+  // Sans / grotesk
   { family: 'Inter', category: 'Sans', weights: [300, 400, 500, 600, 700, 800, 900] },
   { family: 'Space Grotesk', category: 'Sans', weights: [300, 400, 500, 600, 700] },
   { family: 'Sora', category: 'Sans', weights: [100, 200, 300, 400, 500, 600, 700, 800] },
@@ -93,9 +94,32 @@ export const FONTS = [
   { family: 'DM Sans', category: 'Sans', weights: [400, 500, 700] },
   { family: 'Manrope', category: 'Sans', weights: [200, 300, 400, 500, 600, 700, 800] },
   { family: 'Poppins', category: 'Sans', weights: [300, 400, 500, 600, 700, 800, 900] },
+  { family: 'Archivo', category: 'Sans', weights: [300, 400, 500, 600, 700, 800, 900] },
+  { family: 'Figtree', category: 'Sans', weights: [300, 400, 500, 600, 700, 800, 900] },
+  { family: 'Plus Jakarta Sans', category: 'Sans', weights: [200, 300, 400, 500, 600, 700, 800] },
+  { family: 'Rubik', category: 'Sans', weights: [300, 400, 500, 600, 700, 800, 900] },
+  { family: 'Work Sans', category: 'Sans', weights: [300, 400, 500, 600, 700, 800] },
+  { family: 'Montserrat', category: 'Sans', weights: [300, 400, 500, 600, 700, 800, 900] },
+  { family: 'Urbanist', category: 'Sans', weights: [300, 400, 500, 600, 700, 800] },
+  { family: 'Lexend', category: 'Sans', weights: [300, 400, 500, 600, 700, 800] },
+  { family: 'Onest', category: 'Sans', weights: [300, 400, 500, 600, 700, 800] },
+  { family: 'Bricolage Grotesque', category: 'Sans', weights: [300, 400, 500, 600, 700, 800] },
+  { family: 'Instrument Sans', category: 'Sans', weights: [400, 500, 600, 700] },
+  { family: 'Schibsted Grotesk', category: 'Sans', weights: [400, 500, 600, 700, 800, 900] },
+  { family: 'Geist', category: 'Sans', weights: [300, 400, 500, 600, 700, 800, 900] },
+  // Serif
   { family: 'Playfair Display', category: 'Serif', weights: [400, 500, 600, 700, 800, 900] },
   { family: 'Fraunces', category: 'Serif', weights: [300, 400, 500, 600, 700, 900] },
   { family: 'Cormorant Garamond', category: 'Serif', weights: [300, 400, 500, 600, 700] },
+  { family: 'Libre Baskerville', category: 'Serif', weights: [400, 700] },
+  { family: 'Lora', category: 'Serif', weights: [400, 500, 600, 700] },
+  { family: 'Merriweather', category: 'Serif', weights: [300, 400, 700, 900] },
+  { family: 'DM Serif Display', category: 'Serif', weights: [400] },
+  { family: 'Bodoni Moda', category: 'Serif', weights: [400, 500, 600, 700, 800, 900] },
+  { family: 'Instrument Serif', category: 'Serif', weights: [400] },
+  { family: 'Newsreader', category: 'Serif', weights: [200, 300, 400, 500, 600, 700, 800] },
+  { family: 'Spectral', category: 'Serif', weights: [300, 400, 500, 600, 700, 800] },
+  // Display
   { family: 'Bebas Neue', category: 'Display', weights: [400] },
   { family: 'Anton', category: 'Display', weights: [400] },
   { family: 'Oswald', category: 'Display', weights: [200, 300, 400, 500, 600, 700] },
@@ -103,16 +127,50 @@ export const FONTS = [
   { family: 'Syne', category: 'Display', weights: [400, 500, 600, 700, 800] },
   { family: 'Unbounded', category: 'Display', weights: [200, 300, 400, 500, 600, 700, 800, 900] },
   { family: 'Righteous', category: 'Display', weights: [400] },
+  { family: 'Bungee', category: 'Display', weights: [400] },
+  { family: 'Abril Fatface', category: 'Display', weights: [400] },
+  { family: 'Teko', category: 'Display', weights: [300, 400, 500, 600, 700] },
+  { family: 'Russo One', category: 'Display', weights: [400] },
+  { family: 'Chakra Petch', category: 'Display', weights: [300, 400, 500, 600, 700] },
+  { family: 'Monoton', category: 'Display', weights: [400] },
+  { family: 'Cinzel', category: 'Display', weights: [400, 500, 600, 700, 800, 900] },
+  { family: 'Staatliches', category: 'Display', weights: [400] },
+  // Handwriting / script
   { family: 'Caveat', category: 'Handwriting', weights: [400, 500, 600, 700] },
+  { family: 'Dancing Script', category: 'Handwriting', weights: [400, 500, 600, 700] },
+  { family: 'Pacifico', category: 'Handwriting', weights: [400] },
+  { family: 'Permanent Marker', category: 'Handwriting', weights: [400] },
+  { family: 'Shadows Into Light', category: 'Handwriting', weights: [400] },
+  { family: 'Kalam', category: 'Handwriting', weights: [300, 400, 700] },
+  { family: 'Satisfy', category: 'Handwriting', weights: [400] },
+  { family: 'Great Vibes', category: 'Handwriting', weights: [400] },
+  { family: 'Sacramento', category: 'Handwriting', weights: [400] },
+  // Mono
   { family: 'JetBrains Mono', category: 'Mono', weights: [300, 400, 500, 600, 700, 800] },
+  { family: 'IBM Plex Mono', category: 'Mono', weights: [300, 400, 500, 600, 700] },
+  { family: 'Space Mono', category: 'Mono', weights: [400, 700] },
+  { family: 'Courier Prime', category: 'Mono', weights: [400, 700] },
+  { family: 'DM Mono', category: 'Mono', weights: [300, 400, 500] },
 ];
+
+export type FontCategory = (typeof FONTS)[number]['category'];
 
 export const GOOGLE_FONTS_HREF = `https://fonts.googleapis.com/css2?${[
   'Inter:wght@300;400;500;600;700;800;900', 'Space+Grotesk:wght@300;400;500;600;700', 'Sora:wght@100..800',
   'Outfit:wght@100..900', 'DM+Sans:wght@400;500;700', 'Manrope:wght@200..800', 'Poppins:wght@300;400;500;600;700;800;900',
-  'Playfair+Display:wght@400..900', 'Fraunces:wght@300..900', 'Cormorant+Garamond:wght@300..700', 'Bebas+Neue',
-  'Anton', 'Oswald:wght@200..700', 'Archivo+Black', 'Syne:wght@400..800', 'Unbounded:wght@200..900', 'Righteous',
-  'Caveat:wght@400..700', 'JetBrains+Mono:wght@300..800',
+  'Archivo:wght@300..900', 'Figtree:wght@300..900', 'Plus+Jakarta+Sans:wght@200..800', 'Rubik:wght@300..900',
+  'Work+Sans:wght@300..800', 'Montserrat:wght@300..900', 'Urbanist:wght@300..800', 'Lexend:wght@300..800',
+  'Onest:wght@300..800', 'Bricolage+Grotesque:wght@300..800', 'Instrument+Sans:wght@400..700', 'Schibsted+Grotesk:wght@400..900',
+  'Geist:wght@300..900',
+  'Playfair+Display:wght@400..900', 'Fraunces:wght@300..900', 'Cormorant+Garamond:wght@300..700', 'Libre+Baskerville:wght@400;700',
+  'Lora:wght@400..700', 'Merriweather:wght@300;400;700;900', 'DM+Serif+Display', 'Bodoni+Moda:wght@400..900',
+  'Instrument+Serif', 'Newsreader:wght@200..800', 'Spectral:wght@300;400;500;600;700;800',
+  'Bebas+Neue', 'Anton', 'Oswald:wght@200..700', 'Archivo+Black', 'Syne:wght@400..800', 'Unbounded:wght@200..900', 'Righteous',
+  'Bungee', 'Abril+Fatface', 'Teko:wght@300..700', 'Russo+One', 'Chakra+Petch:wght@300;400;500;600;700', 'Monoton',
+  'Cinzel:wght@400..900', 'Staatliches',
+  'Caveat:wght@400..700', 'Dancing+Script:wght@400..700', 'Pacifico', 'Permanent+Marker', 'Shadows+Into+Light',
+  'Kalam:wght@300;400;700', 'Satisfy', 'Great+Vibes', 'Sacramento',
+  'JetBrains+Mono:wght@300..800', 'IBM+Plex+Mono:wght@300;400;500;600;700', 'Space+Mono:wght@400;700', 'Courier+Prime:wght@400;700', 'DM+Mono:wght@300;400;500',
 ].map((f) => `family=${f}`).join('&')}&display=swap`;
 
 // ── Music / SFX (procedurally synthesized in-app, royalty free) ─────────────

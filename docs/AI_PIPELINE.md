@@ -228,3 +228,41 @@ None of these paths use the browser; keys never leave the server.
 - It cannot claim an export happened; it can only request one through `export_project`, which the editor performs
   with the real renderer.
 - It cannot bypass capability checks: a missing key produces a message, never a placeholder image.
+
+---
+
+## 12. Built-in "Prism AI Cloud" provider
+
+Prism can serve inference with no user setup. The managed provider is a normal entry in the same
+catalog (`opencode`, displayed as **Prism AI Cloud**) whose key lives only in server environment
+variables, never in the database or the browser.
+
+| Env var | Purpose |
+| --- | --- |
+| `PRISM_AI_API_KEY` (or `OPENCODE_API_KEY`) | Managed key for the built-in provider |
+| `PRISM_AI_BASE_URL` | OpenAI-compatible base URL, default `https://opencode.ai/inference/openai/v1` |
+| `PRISM_AI_MODEL` | Default model, e.g. `kimi-k2.6` |
+| `OPENROUTER_API_KEY` / `OPENROUTER_MODEL` | Optional secondary managed route |
+
+Flow:
+
+1. `serverKey(providerId)` reads the env var. If present, `managedProviders()` exposes the provider.
+2. `GET /api/ai/providers` materialises a virtual, read-only provider entry (`managed: true`,
+   `masked: "Server-managed key"`). No key material is serialised.
+3. `resolveTarget(user)` prefers the user's own connected provider, then falls back to managed keys.
+4. `POST /api/ai/chat` streams exactly like any BYO route: real provider call, real tools, real errors.
+
+If the upstream is unreachable the stream carries the provider's own error text; nothing is simulated.
+
+## 13. Manual cut-out path
+
+Background removal is never automatic. The agent can only *open the tool*:
+
+- Tool `open_cutout_studio { layer, mode, hint }` → `clientAction { type: 'cutout', layerId }` → the editor
+  opens `BackgroundRemoverDialog` for that image.
+- The dialog computes masks on-device with Canvas: brush/restore strokes, magic-wand flood fill,
+  global colour key by picked colour or dominant swatch, box select, edge feather, undo/redo.
+- `Apply` writes `layer.cutout = { src, mode }` (a transparent PNG mask stored with the project).
+  The renderer composites it through a cached offscreen canvas; `Cut out` bakes a new transparent layer.
+- Because the mask is part of the layer, it survives autosave, project API normalisation, snapshots,
+  share links and exports.

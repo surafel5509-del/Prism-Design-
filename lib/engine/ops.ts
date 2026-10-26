@@ -260,7 +260,8 @@ export function normalizeLayer(partial: Partial<Layer> & { type?: Layer['type'] 
     effects: partial.effects ?? [], keyframes: partial.keyframes ?? {},
     parentId: partial.parentId ?? null,
     startTime: partial.startTime ?? 0, endTime: partial.endTime ?? 8,
-    mask: partial.mask ?? null, motionPath: partial.motionPath ?? null,
+    mask: partial.mask ?? null,
+    cutout: partial.cutout ?? null, motionPath: partial.motionPath ?? null,
     particles: partial.particles ?? null, meta: { ...(partial.meta ?? {}), createdAt: now },
   };
 }

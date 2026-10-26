@@ -19,6 +19,7 @@ import { CommandPalette } from '@/components/editor/CommandPalette';
 import { Onboarding } from '@/components/editor/Onboarding';
 import { PreviewDialog } from '@/components/editor/dialogs/PreviewDialog';
 import { ExportDialog } from '@/components/editor/dialogs/ExportDialog';
+import { BackgroundRemoverDialog } from '@/components/editor/dialogs/BackgroundRemoverDialog';
 import { HistoryDialog } from '@/components/editor/dialogs/HistoryDialog';
 import { ShareDialog } from '@/components/editor/dialogs/ShareDialog';
 import { PrismLogo } from '@/components/brand/PrismLogo';
@@ -102,6 +103,11 @@ export function EditorShell({ projectId }: { projectId: string }) {
     if (action.type === 'plan') toast.message('Plan ready', { description: action.summary });
     else if (action.type === 'ask') {
       if (action.kind === 'approval') toast.message('Plan needs approval', { description: 'Review the plan in the Agent panel, then approve or edit it.' });
+    } else if (action.type === 'cutout') {
+      const state = useEditor.getState();
+      const id = action.layerId || state.selection[0] || state.project.layers.find((l) => l.type === 'image')?.id;
+      if (id) state.openCutout(id);
+      toast.message('Cut-out studio ready', { description: 'Paint or colour-pick what to erase, then apply.' });
     } else if (action.type === 'preview') {
       useEditor.getState().setPreviewOpen(true);
       if (action.autoplay) useEditor.getState().setPlaying(true);
@@ -304,6 +310,7 @@ export function EditorShell({ projectId }: { projectId: string }) {
       <ExportDialog request={exportRequest} onDone={() => setExportRequest(null)} />
       <HistoryDialog open={historyOpen} onOpenChange={setHistoryOpen} />
       <ShareDialog />
+      <BackgroundRemoverDialog />
       <Onboarding />
 
       <div className={cn('fixed inset-0 z-[140] hidden place-items-center bg-background p-6 text-center max-lg:grid')} aria-hidden="true">

@@ -55,14 +55,26 @@ export function AIPanel() {
   useEffect(() => { useAgent.getState().hydrate(); }, []);
 
   useEffect(() => {
+    const connectedIds = new Set((data?.providers ?? []).filter((p) => p.connected).map((p) => p.provider));
     const stored = loadTarget();
-    if (stored) { setTarget(stored); return; }
+    if (stored && connectedIds.has(stored.provider)) {
+      const provider = data?.providers.find((p) => p.provider === stored.provider);
+      const models = provider?.models ?? [];
+      // A stale model id (rotated provider, renamed model) silently breaks runs — heal it.
+      const model = models.length && !models.includes(stored.model) ? provider?.defaultModel ?? data?.active?.model ?? stored.model : stored.model;
+      const next = { provider: stored.provider, model };
+      setTarget(next);
+      if (next.model !== stored.model) saveTarget(next);
+      return;
+    }
     if (data?.active) {
       const t = { provider: data.active.provider, model: data.active.model };
       setTarget(t);
       saveTarget(t);
+    } else if (stored) {
+      setTarget(null);
     }
-  }, [data?.active]);
+  }, [data?.active, data?.providers]);
 
   useEffect(() => {
     const el = scrollRef.current;

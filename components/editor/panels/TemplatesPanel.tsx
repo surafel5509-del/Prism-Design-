@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { EmptyState, Segmented, Skeleton } from '@/components/ui/misc';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { Search, Star, Plus, Check, LayoutTemplate, Wand2, Clock } from 'lucide-react';
+import { Search, Star, Plus, Check, LayoutTemplate, Wand2, Clock, Zap, Play } from 'lucide-react';
 import { toast } from 'sonner';
 
 const ASPECTS: (Aspect | 'All')[] = ['All', '16:9', '9:16', '1:1', '4:5'];
@@ -21,6 +21,7 @@ export function TemplatesPanel() {
   const [category, setCategory] = React.useState<string>('All');
   const [aspect, setAspect] = React.useState<Aspect | 'All'>('All');
   const [onlyFavs, setOnlyFavs] = React.useState(false);
+  const [motionOnly, setMotionOnly] = React.useState(false);
   const [limit, setLimit] = React.useState(36);
   const favorites = useEditor((s) => s.favorites);
   const toggleFavorite = useEditor((s) => s.toggleFavorite);
@@ -31,10 +32,11 @@ export function TemplatesPanel() {
       if (category !== 'All' && t.category !== category) return false;
       if (aspect !== 'All' && t.aspect !== aspect) return false;
       if (onlyFavs && !favorites.includes(t.id)) return false;
+      if (motionOnly && t.duration < 12) return false;
       if (!q) return true;
       return t.name.toLowerCase().includes(q) || t.tags.some((tag) => tag.includes(q)) || t.category.toLowerCase().includes(q);
     });
-  }, [all, query, category, aspect, onlyFavs, favorites]);
+  }, [all, query, category, aspect, onlyFavs, motionOnly, favorites]);
 
   return (
     <div className="flex h-full flex-col">
@@ -45,6 +47,7 @@ export function TemplatesPanel() {
         </div>
         <div className="flex items-center gap-1 overflow-x-auto pb-0.5 no-scrollbar">
           <FilterChip active={onlyFavs} onClick={() => setOnlyFavs(!onlyFavs)}><Star className={cn('h-2.5 w-2.5', onlyFavs && 'fill-current')} /></FilterChip>
+          <FilterChip active={motionOnly} onClick={() => { setMotionOnly(!motionOnly); setLimit(36); }}><Zap className={cn('h-2.5 w-2.5', motionOnly && 'text-violet-300')} /> 15–30s motion</FilterChip>
           {['All', ...TEMPLATE_CATEGORIES].map((c) => <FilterChip key={c} active={category === c} onClick={() => { setCategory(c); setLimit(36); }}>{c}</FilterChip>)}
         </div>
         <Segmented size="xs" value={aspect} onChange={(v) => { setAspect(v); setLimit(36); }} options={ASPECTS.map((a) => ({ value: a, label: a }))} />
@@ -80,6 +83,8 @@ function TemplateCard({ template, favorite, onFav }: { template: TemplateDef; fa
   const ref = React.useRef<HTMLDivElement | null>(null);
   const [visible, setVisible] = React.useState(false);
   const [rendered, setRendered] = React.useState<(ReturnType<TemplateDef['render']> & { duration: number }) | null>(null);
+  const [hovering, setHovering] = React.useState(false);
+  const isMotion = template.duration >= 12;
   const applyTemplate = useEditor((s) => s.applyTemplate);
   const setLeftTab = useEditor((s) => s.setLeftTab);
   const setTool = useEditor((s) => s.setTool);
@@ -99,9 +104,19 @@ function TemplateCard({ template, favorite, onFav }: { template: TemplateDef; fa
   }, [visible, template]);
 
   return (
-    <div ref={ref} className="group relative overflow-hidden rounded-lg border border-border/60 bg-background/40 transition-colors hover:border-violet-500/50">
+    <div
+      ref={ref}
+      onMouseEnter={() => setHovering(true)}
+      onMouseLeave={() => setHovering(false)}
+      className="group relative overflow-hidden rounded-lg border border-border/60 bg-background/40 transition-colors hover:border-violet-500/50"
+    >
       <div className="relative aspect-[4/5] overflow-hidden bg-[repeating-conic-gradient(hsl(var(--muted))_0%_25%,transparent_0%_50%)] bg-[length:14px_14px]">
-        {rendered ? <SceneCanvas project={rendered} playing={false} quality={0.7} /> : <Skeleton className="h-full w-full rounded-none" />}
+        {rendered ? <SceneCanvas project={rendered} playing={isMotion && hovering} quality={0.7} /> : <Skeleton className="h-full w-full rounded-none" />}
+        {isMotion && (
+          <Badge variant="secondary" className="absolute left-1 top-1 gap-1 px-1 py-0 text-[7.5px] backdrop-blur">
+            <Play className="h-2 w-2 fill-current" /> {template.duration}s
+          </Badge>
+        )}
         <div className="absolute inset-0 flex flex-col justify-end gap-1 bg-gradient-to-t from-black/80 via-black/10 to-transparent p-1.5 opacity-0 transition-opacity group-hover:opacity-100">
           <Button size="xs" variant="prism" className="w-full" onClick={() => { applyTemplate(template); setLeftTab('layers'); setTool('select'); toast.success(`${template.name} applied`, { description: `${template.palette[0]} palette · ${template.duration}s` }); }}>
             <Wand2 className="h-2.5 w-2.5" /> Use template

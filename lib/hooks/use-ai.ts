@@ -6,17 +6,20 @@ import type { AISettings } from '@/lib/server/store';
 export interface CatalogProvider {
   id: string; name: string; blurb: string; docs: string; baseUrl?: string; accent?: string;
   requiresKey: boolean; defaultModel: string; keyPrefix?: string; customBaseUrl?: boolean; curated: ModelInfo[];
+  managed?: boolean; managedAvailable?: boolean;
 }
 export interface ConnectedProvider {
   provider: string; name: string; accent?: string; connected: boolean;
   status: 'connected' | 'error' | 'unconfigured'; message?: string; masked: string; keyPreview: string;
   baseUrl: string; defaultModel?: string; lastChecked?: number; models: string[]; requiresKey: boolean;
+  managed?: boolean; managedAvailable?: boolean;
 }
 export interface ProvidersResponse {
   providers: ConnectedProvider[];
   catalog: CatalogProvider[];
   settings: AISettings;
   connectedCount: number;
+  managedCount?: number;
   active: { provider: string; model: string } | null;
   usage: { requests: number; tokensIn: number; tokensOut: number; cost: number };
 }

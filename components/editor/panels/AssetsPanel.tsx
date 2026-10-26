@@ -1,7 +1,8 @@
 'use client';
 import * as React from 'react';
 import { useEditor } from '@/lib/store/editor';
-import { BACKDROPS, STICKERS, FONTS, MUSIC, SFX, LOTTIE_STUBS, iconToDataUrl, searchIcons, loadIcons, searchStock, type LibraryItem, type StockPhoto, type Track } from '@/lib/data/library';
+import { BACKDROPS, FONTS, MUSIC, SFX, LOTTIE_STUBS, iconToDataUrl, searchIcons, loadIcons, searchStock, type LibraryItem, type StockPhoto, type Track } from '@/lib/data/library';
+import { STICKER_CATEGORIES, STICKER_COUNT, searchStickers, type Sticker as StickerItem, type StickerCategory } from '@/lib/data/stickers';
 import { SceneCanvas } from '@/components/canvas/SceneCanvas';
 import { createLayer, createText, gradient } from '@/lib/engine/factory';
 import { Button } from '@/components/ui/button';
@@ -57,7 +58,7 @@ export function AssetsPanel() {
         <div className="p-2">
           {tab === 'backdrops' && <Backdrops onPick={(item) => addImage(item.src, item.name, item.w, item.h)} />}
           {tab === 'icons' && <Icons onPick={(src, name) => addImage(src, name, 480, 480, 'contain')} />}
-          {tab === 'stickers' && <Stickers onPick={(item) => addImage(item.src, item.name, 300, 300, 'contain')} />}
+          {tab === 'stickers' && <Stickers onPick={(item) => addImage(item.src, item.name, 320, 320, 'contain')} />}
           {tab === 'photos' && <Photos onPick={(p) => addImage(p.full, p.alt || 'Stock photo')} />}
           {tab === 'uploads' && <Uploads assets={assets} onUpload={(files) => {
             Array.from(files).forEach(async (f) => {
@@ -184,15 +185,44 @@ function Icons({ onPick }: { onPick: (src: string, name: string) => void }) {
   );
 }
 
-function Stickers({ onPick }: { onPick: (item: LibraryItem) => void }) {
+function Stickers({ onPick }: { onPick: (item: StickerItem) => void }) {
+  const [query, setQuery] = React.useState('');
+  const [category, setCategory] = React.useState<StickerCategory | 'All'>('All');
+  const results = React.useMemo(() => searchStickers(query, category, 300), [query, category]);
+  const total = STICKER_COUNT();
   return (
-    <div className="grid grid-cols-3 gap-1.5">
-      {STICKERS.map((s) => (
-        <button key={s.id} onClick={() => onPick(s)} className="aspect-square rounded-md border border-border/60 bg-[repeating-conic-gradient(hsl(var(--muted))_0%_25%,transparent_0%_50%)] bg-[length:12px_12px] p-2 transition-transform hover:scale-[1.03]" title={s.name}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={s.src} alt={s.name} className="h-full w-full object-contain" />
-        </button>
-      ))}
+    <div>
+      <div className="relative mb-1.5">
+        <Search className="pointer-events-none absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground" />
+        <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={`Search ${total} stickers…`} className="h-7 pl-6 text-[10px]" />
+      </div>
+      <div className="mb-2 flex flex-wrap gap-1">
+        {(['All', ...STICKER_CATEGORIES] as const).map((c) => (
+          <button
+            key={c}
+            onClick={() => setCategory(c)}
+            className={cn('rounded-full border px-1.5 py-0.5 text-[9px] transition-colors',
+              category === c ? 'border-violet-400/50 bg-violet-500/15 text-violet-200' : 'border-border/60 text-muted-foreground hover:text-foreground')}
+          >{c}</button>
+        ))}
+      </div>
+      <p className="mb-1.5 flex items-center justify-between text-[9px] text-muted-foreground">
+        <span>{results.length} shown</span><span>{total} total · crisp SVG</span>
+      </p>
+      <div className="grid grid-cols-3 gap-1.5">
+        {results.map((s) => (
+          <button
+            key={s.id}
+            onClick={() => onPick(s)}
+            className="aspect-square rounded-md border border-border/60 bg-[repeating-conic-gradient(hsl(var(--muted))_0%_25%,transparent_0%_50%)] bg-[length:12px_12px] p-1.5 transition-transform hover:-translate-y-0.5 hover:border-violet-400/40"
+            title={`${s.name} · ${s.category}`}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={s.src} alt={s.name} className="h-full w-full object-contain" loading="lazy" />
+          </button>
+        ))}
+      </div>
+      {results.length === 0 && <EmptyState icon={<Search className="h-4 w-4" />} title="No stickers match" description="Try “arrow”, “burst”, “heart” or clear the category." />}
     </div>
   );
 }

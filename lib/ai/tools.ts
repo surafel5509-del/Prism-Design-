@@ -1350,6 +1350,26 @@ export function createToolbelt(deps: ToolBeltDeps) {
     }),
   });
 
+  const openCutoutTool = tool({
+    description: 'Open the manual cut-out studio for an image layer so the user can erase exactly what they want (brush, magic wand, or colour key). Prism never guesses a removal automatically — this is the only background-removal path. Use when the user asks to remove/replace a background, cut out a subject, or key out a colour. Tell the user to paint, then wait for them to apply it.',
+    parameters: z.object({
+      layer: z.string().min(1).describe('Layer id or name of the image to cut out'),
+      mode: z.enum(['remove', 'keep']).default('remove'),
+      hint: z.string().max(200).optional(),
+    }),
+    execute: async ({ layer: ref, mode, hint }): Promise<ToolOutput> => {
+      const target = find(ref);
+      if (!target) return nope(`No layer matches “${ref}”.`);
+      if (target.type !== 'image' || !target.media?.src) return nope(`“${target.name}” is not an image layer with a source.`);
+      const current = target.cutout ? `A cut-out already exists (${target.cutout.mode}).` : 'No cut-out yet.';
+      return done(
+        `Opening the cut-out studio for “${target.name}” in ${mode === 'keep' ? 'keep' : 'remove'} mode. ${current} Paint or colour-pick, then Apply.`,
+        [],
+        { clientAction: { type: 'cutout', layerId: target.id }, data: { layerId: target.id, mode, hint } },
+      );
+    },
+  });
+
   const saveProjectTool = tool({
     description: 'Checkpoint the project (the editor autosaves continuously; this marks a named save point the user can rely on). Call after a big build.',
     parameters: z.object({ note: z.string().max(140).optional() }),
@@ -1365,6 +1385,7 @@ export function createToolbelt(deps: ToolBeltDeps) {
     set_plan: setPlan,
     complete_step: completeStep,
     ask_user: askUser,
+    open_cutout_studio: openCutoutTool,
     get_project_state: getState,
     create_project: createProjectTool,
     generate_design: generateDesignTool,

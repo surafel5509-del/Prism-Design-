@@ -5,6 +5,10 @@ const kf = (time: number, value: number | [number, number], easing?: Easing): Ke
 const out: Easing = { type: 'easeOut' };
 const expo: Easing = { type: 'bezier', bezier: [0.16, 1, 0.3, 1] };
 const spring: Easing = { type: 'spring', stiffness: 170, damping: 14 };
+const bounce: Easing = { type: 'bounce' };
+const elastic: Easing = { type: 'elastic' };
+const easeOut: Easing = out;
+const bounceEase: Easing = bounce;
 
 export interface AnimationPreset {
   id: string;
@@ -34,6 +38,26 @@ export const ANIMATION_PRESETS: AnimationPreset[] = [
   { id: 'glitch', name: 'Glitch', group: 'Emphasis', icon: '⚡', description: 'Rapid jitter', apply: (l) => ({ x: [kf(0.0, l.x), kf(0.08, l.x - 8), kf(0.16, l.x + 6), kf(0.24, l.x - 3), kf(0.32, l.x)], hue: [kf(0, 0), kf(0.1, 40), kf(0.2, -30), kf(0.35, 0)] }) },
   { id: 'shake', name: 'Shake', group: 'Emphasis', icon: '↯', description: 'Impact shake', apply: (l) => ({ x: [kf(0, l.x), kf(0.06, l.x - 10), kf(0.12, l.x + 9), kf(0.18, l.x - 5), kf(0.26, l.x)] }) },
   { id: 'spin', name: 'Spin', group: 'Emphasis', icon: '⟳', description: 'Full rotation', apply: (l) => ({ rotation: [kf(0, l.rotation), kf(1.2, l.rotation + 360, { type: 'bezier', bezier: [0.16, 1, 0.3, 1] })] }) },
+  { id: 'flip-in', name: 'Flip in', group: 'In', icon: '⇋', description: '3D card flip', apply: () => ({ scaleX: [kf(0, 0.02), kf(0.7, 1, spring)], opacity: [kf(0, 0), kf(0.2, 1)] }) },
+  { id: 'wipe-in', name: 'Wipe in', group: 'In', icon: '⇥', description: 'Reveal from the left', apply: (l) => ({ x: [kf(0, l.x - 260), kf(0.8, l.x, expo)], opacity: [kf(0, 0), kf(0.35, 1)] }) },
+  { id: 'drop-in', name: 'Drop in', group: 'In', icon: '↓', description: 'Gravity drop with bounce', apply: (l) => ({ y: [kf(0, l.y - 420), kf(0.62, l.y, bounceEase)], scaleY: [kf(0, 0.86), kf(0.62, 1, spring)] }) },
+  { id: 'unfold', name: 'Unfold', group: 'In', icon: '⊞', description: 'Height unfold', apply: () => ({ scaleY: [kf(0, 0.05), kf(0.85, 1, spring)], opacity: [kf(0, 0), kf(0.3, 1)] }) },
+  { id: 'zoom-blur', name: 'Zoom blur', group: 'In', icon: '⊚', description: 'Rush in with motion blur', apply: () => ({ scaleX: [kf(0, 1.6), kf(0.9, 1, expo)], scaleY: [kf(0, 1.6), kf(0.9, 1, expo)], blur: [kf(0, 26), kf(0.8, 0)], opacity: [kf(0, 0), kf(0.25, 1)] }) },
+  { id: 'squeeze-out', name: 'Squeeze out', group: 'Out', icon: '⇥', description: 'Collapse sideways', apply: (l, d) => ({ scaleX: [kf(Math.max(0, d - 0.6), 1), kf(d, 0.02, out)], opacity: [kf(Math.max(0, d - 0.3), 1), kf(d, 0)] }) },
+  { id: 'lift-out', name: 'Lift out', group: 'Out', icon: '⇧', description: 'Float up and fade', apply: (l, d) => ({ y: [kf(Math.max(0, d - 0.8), l.y), kf(d, l.y - 140, out)], opacity: [kf(Math.max(0, d - 0.5), 1), kf(d, 0)] }) },
+  { id: 'blur-out', name: 'Blur out', group: 'Out', icon: '❊', description: 'Defocus exit', apply: (_l, d) => ({ blur: [kf(Math.max(0, d - 0.6), 0), kf(d, 30)], opacity: [kf(Math.max(0, d - 0.4), 1), kf(d, 0)] }) },
+  { id: 'orbit', name: 'Orbit', group: 'Loop', icon: '◌', description: 'Circular drift', apply: (l) => ({ x: [kf(0, l.x), kf(1.5, l.x + 70), kf(3, l.x), kf(4.5, l.x - 70), kf(6, l.x)], y: [kf(0, l.y), kf(1.5, l.y - 50), kf(3, l.y - 100), kf(4.5, l.y - 50), kf(6, l.y)] }) },
+  { id: 'breathe', name: 'Breathe', group: 'Loop', icon: '◍', description: 'Slow opacity breath', apply: () => ({ opacity: [kf(0, 1), kf(1.8, 0.45), kf(3.6, 1)], scaleX: [kf(0, 1), kf(1.8, 1.03), kf(3.6, 1)], scaleY: [kf(0, 1), kf(1.8, 1.03), kf(3.6, 1)] }) },
+  { id: 'marquee', name: 'Marquee', group: 'Loop', icon: '⇠', description: 'Endless horizontal scroll', apply: (l) => ({ x: [kf(0, l.x), kf(4, l.x - 320, { type: 'linear' })] }) },
+  { id: 'shimmer', name: 'Shimmer', group: 'Emphasis', icon: '✦', description: 'Light sweep highlight', apply: () => ({ brightness: [kf(0, 100), kf(0.5, 160), kf(1, 100)], opacity: [kf(0, 1), kf(0.5, 0.92), kf(1, 1)] }) },
+  { id: 'rubber', name: 'Rubber band', group: 'Emphasis', icon: '∿', description: 'Elastic squash', apply: () => ({ scaleX: [kf(0, 1), kf(0.25, 1.14), kf(0.5, 0.92), kf(0.75, 1.05), kf(1, 1, elastic)], scaleY: [kf(0, 1), kf(0.25, 0.9), kf(0.5, 1.08), kf(0.75, 0.97), kf(1, 1, elastic)] }) },
+  { id: 'heartbeat', name: 'Heartbeat', group: 'Emphasis', icon: '♥', description: 'Double thump', apply: () => ({ scaleX: [kf(0, 1), kf(0.12, 1.16), kf(0.24, 1), kf(0.36, 1.1), kf(0.54, 1)], scaleY: [kf(0, 1), kf(0.12, 1.16), kf(0.24, 1), kf(0.36, 1.1), kf(0.54, 1)] }) },
+  { id: 'whip', name: 'Whip pan', group: 'Emphasis', icon: '⇢', description: 'Fast blur pan', apply: (l) => ({ x: [kf(0, l.x), kf(0.22, l.x + 34), kf(0.5, l.x)], blur: [kf(0, 0), kf(0.15, 18), kf(0.45, 0)] }) },
+  { id: 'counter-spin', name: 'Counter spin', group: 'Emphasis', icon: '↺', description: 'Spin and settle back', apply: (l) => ({ rotation: [kf(0, l.rotation), kf(0.7, l.rotation - 180, spring), kf(1.2, l.rotation, spring)] }) },
+  { id: 'glitch-slam', name: 'Glitch slam', group: 'Emphasis', icon: '⚡', description: 'Hard cut impact', apply: (l) => ({ x: [kf(0, l.x), kf(0.05, l.x + 18), kf(0.1, l.x - 12), kf(0.16, l.x)], scaleX: [kf(0, 1.3), kf(0.14, 1, expo)], scaleY: [kf(0, 1.3), kf(0.14, 1, expo)], hue: [kf(0, 0), kf(0.08, 60), kf(0.2, 0)] }) },
+  { id: 'build-up', name: 'Build up', group: 'In', icon: '▲', description: 'Stack up from below', apply: (l) => ({ y: [kf(0, l.y + 120), kf(0.9, l.y, expo)], scaleY: [kf(0, 0.6), kf(0.9, 1, spring)], opacity: [kf(0, 0), kf(0.4, 1)] }) },
+  { id: 'tilt-in', name: 'Tilt in', group: 'In', icon: '◣', description: 'Angled settle', apply: (l) => ({ rotation: [kf(0, l.rotation - 8), kf(0.9, l.rotation, spring)], x: [kf(0, l.x - 90), kf(0.9, l.x, expo)], opacity: [kf(0, 0), kf(0.5, 1)] }) },
+
 ];
 
 export function applyPresetToLayer(layer: Layer, presetId: string, duration: number): { keyframes: Layer['keyframes']; text?: Layer['text'] } {

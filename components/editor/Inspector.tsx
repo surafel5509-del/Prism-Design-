@@ -6,6 +6,7 @@ import type { AnimatableProp, BlendMode, EffectType, Gradient, Layer, ShapeKind,
 import { resolveLayer } from '@/lib/engine/animation';
 import { EASING_PRESETS } from '@/lib/engine/easing';
 import { ANIMATION_PRESETS, applyPresetToLayer } from '@/lib/engine/presets';
+import { TEXT_EFFECTS, applyTextEffect } from '@/lib/engine/text-effects';
 import { PALETTES } from '@/lib/engine/factory';
 import { FONTS } from '@/lib/data/library';
 import { ASPECTS } from '@/lib/engine/types';
@@ -27,6 +28,7 @@ import {
   Diamond, Plus, Trash2, Sparkles, Move, Maximize2, RotateCw, Droplet, Type as TypeIcon,
   Image as ImageIcon, Shapes, Layers, Blend, Eye, Wand2, ChevronDown, ArrowUpRight, CircleDot,
   Settings2, Palette, Zap, Film, Grid3x3, MousePointer2, ArrowRight, Clock, Loader2, CheckCircle2, XCircle,
+  Scissors, Brush, X,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -416,6 +418,26 @@ function TextSection({ layer }: { layer: Layer }) {
         <button onClick={() => setText({ underline: !t.underline })} className={cn('rounded border px-1.5 py-0.5 text-[9px] underline', t.underline ? 'border-violet-500/50 bg-violet-500/15 text-violet-300' : 'border-border text-muted-foreground')}>U</button>
       </div>
       <ColorField color={t.color} gradient={t.gradient} onChange={(c) => setText({ color: c, gradient: null })} onGradientChange={(g) => setText({ gradient: g })} label="Text" />
+      <div className="mt-1.5">
+        <Label className="mb-0.5 flex items-center gap-1"><Wand2 className="h-2.5 w-2.5 text-violet-300" /> Text styles</Label>
+        <div className="grid grid-cols-2 gap-1">
+          {TEXT_EFFECTS.map((fx) => (
+            <button
+              key={fx.id}
+              title={fx.description}
+              onClick={() => {
+                const patch = applyTextEffect(layer, fx.id);
+                updateLayer(layer.id, { ...patch, name: layer.name });
+                toast.success(`${fx.name} applied`, { description: fx.description });
+              }}
+              className="group rounded-md border border-border/60 bg-background/40 px-1.5 py-1 text-left transition-colors hover:border-violet-400/45 hover:bg-violet-500/[0.08]"
+            >
+              <span className="block truncate text-[8.5px] font-medium leading-tight">{fx.name}</span>
+              <span className="block truncate text-[7.5px] leading-tight text-muted-foreground">{fx.group}</span>
+            </button>
+          ))}
+        </div>
+      </div>
       <div className="mt-1">
         <Label className="mb-0.5 block">Text animator</Label>
         <div className="grid grid-cols-2 gap-1">
@@ -433,6 +455,7 @@ function TextSection({ layer }: { layer: Layer }) {
 
 function MediaSection({ layer }: { layer: Layer }) {
   const updateLayer = useEditor((s) => s.updateLayer);
+  const openCutout = useEditor((s) => s.openCutout);
   const m = layer.media;
   return (
     <Section title="Media">
@@ -446,6 +469,26 @@ function MediaSection({ layer }: { layer: Layer }) {
           <input type="file" accept="image/*" className="hidden" onChange={async (e) => { const f = e.target.files?.[0]; if (!f) return; const src = await fileToDataUrl(f); updateLayer(layer.id, { media: { ...layer.media!, src } }); toast.success('Media replaced'); }} />
         </label>
       </div>
+      {layer.type === 'image' && layer.media?.src && (
+        <div className="rounded-lg border border-fuchsia-500/25 bg-fuchsia-500/[0.07] p-1.5">
+          <div className="flex items-center gap-1.5">
+            <Scissors className="h-3 w-3 text-fuchsia-300" />
+            <span className="text-[9.5px] font-medium">Background remover</span>
+            {layer.cutout && <span className="ml-auto rounded bg-fuchsia-500/20 px-1 text-[8px] text-fuchsia-200">{layer.cutout.mode === 'keep' ? 'keep' : 'removed'}</span>}
+          </div>
+          <p className="mt-0.5 text-[8.5px] leading-snug text-muted-foreground">Paint or colour-pick exactly what to erase. Nothing is guessed.</p>
+          <div className="mt-1 flex gap-1">
+            <Button variant="outline" size="sm" className="h-6 flex-1 text-[9.5px]" onClick={() => openCutout(layer.id)}>
+              <Brush className="h-3 w-3" /> {layer.cutout ? 'Edit cut-out' : 'Open cut-out studio'}
+            </Button>
+            {layer.cutout && (
+              <Button variant="ghost" size="sm" className="h-6 px-1.5 text-[9.5px]" onClick={() => updateLayer(layer.id, { cutout: null })} title="Remove cut-out">
+                <X className="h-3 w-3" />
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
       {m && (
         <>
           <Segmented size="xs" value={m.fit} onChange={(v) => updateLayer(layer.id, { media: { ...m, fit: v } })} options={[{ value: 'cover', label: 'Cover' }, { value: 'contain', label: 'Contain' }, { value: 'fill', label: 'Fill' }]} />

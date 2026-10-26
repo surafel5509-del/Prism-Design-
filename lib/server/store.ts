@@ -12,6 +12,8 @@ export interface StoredProvider {
   lastChecked?: number;
   defaultModel?: string;
   models?: { id: string; name: string }[];
+  /** Uses a server-owned key from env — the user never sees or supplies it. */
+  managed?: boolean;
 }
 
 export interface AISettings {

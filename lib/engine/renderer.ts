@@ -29,6 +29,39 @@ export function getImage(src: string): HTMLImageElement | null {
 
 export function preloadImage(src: string) { getImage(src); }
 
+// ── Manual cut-out cache (painted alpha masks from the background remover) ───
+const cutoutCache = new Map<string, { canvas: HTMLCanvasElement; done: boolean }>();
+
+function getCutout(layer: Layer): HTMLCanvasElement | null {
+  if (!layer.cutout?.src || !layer.media?.src || typeof document === 'undefined') return null;
+  const key = `${layer.media.src}::${layer.cutout.src}::${layer.cutout.mode}`;
+  const hit = cutoutCache.get(key);
+  if (hit && hit.done) return hit.canvas;
+  const base = getImage(layer.media.src);
+  const mask = getImage(layer.cutout.src);
+  if (!base || !mask) return null;
+  const entry = hit ?? { canvas: document.createElement('canvas'), done: false };
+  cutoutCache.set(key, entry);
+  const c = entry.canvas;
+  c.width = base.width || 1;
+  c.height = base.height || 1;
+  const cctx = c.getContext('2d');
+  if (!cctx) return null;
+  cctx.clearRect(0, 0, c.width, c.height);
+  if (layer.cutout.mode === 'keep') {
+    cctx.drawImage(mask, 0, 0, c.width, c.height);
+    cctx.globalCompositeOperation = 'source-in';
+    cctx.drawImage(base, 0, 0, c.width, c.height);
+  } else {
+    cctx.drawImage(base, 0, 0, c.width, c.height);
+    cctx.globalCompositeOperation = 'destination-out';
+    cctx.drawImage(mask, 0, 0, c.width, c.height);
+  }
+  cctx.globalCompositeOperation = 'source-over';
+  entry.done = true;
+  return c;
+}
+
 // ── Video frame cache (image-to-motion, imports, precomps) ───────────────────
 const videoCache = new Map<string, { el: HTMLVideoElement; ready: boolean }>();
 
@@ -167,9 +200,150 @@ function starPath(ctx: CanvasRenderingContext2D, w: number, h: number, points: n
   polygonPath(ctx, w, h, n, Math.max(0.05, Math.min(0.95, innerRatio)));
 }
 
+
+// ── Extended shape paths ────────────────────────────────────────────
+function ringPath(ctx: CanvasRenderingContext2D, w: number, h: number, thickness: number) {
+  const t = Math.max(0.05, Math.min(0.9, thickness));
+  const rx = w / 2, ry = h / 2, cx = w / 2, cy = h / 2;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2, false);
+  ctx.ellipse(cx, cy, rx * t, ry * t, 0, 0, Math.PI * 2, true);
+}
+
+function halfCirclePath(ctx: CanvasRenderingContext2D, w: number, h: number) {
+  ctx.beginPath();
+  ctx.ellipse(w / 2, h, w / 2, h, 0, Math.PI, Math.PI * 2);
+  ctx.closePath();
+}
+
+function quarterCirclePath(ctx: CanvasRenderingContext2D, w: number, h: number) {
+  ctx.beginPath();
+  ctx.moveTo(0, h);
+  ctx.ellipse(0, h, w, h, 0, -Math.PI / 2, 0);
+  ctx.closePath();
+}
+
+function chevronPath(ctx: CanvasRenderingContext2D, w: number, h: number, notch: number) {
+  const n = Math.max(0.1, Math.min(0.8, notch)) * w;
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(w - n, 0);
+  ctx.lineTo(w, h / 2);
+  ctx.lineTo(w - n, h);
+  ctx.lineTo(0, h);
+  ctx.lineTo(n, h / 2);
+  ctx.closePath();
+}
+
+function crossPath(ctx: CanvasRenderingContext2D, w: number, h: number, arm: number) {
+  const a = Math.max(0.12, Math.min(0.48, arm));
+  const x0 = w * (0.5 - a / 2), x1 = w * (0.5 + a / 2);
+  const y0 = h * (0.5 - a / 2), y1 = h * (0.5 + a / 2);
+  ctx.beginPath();
+  ctx.moveTo(x0, 0); ctx.lineTo(x1, 0); ctx.lineTo(x1, y0); ctx.lineTo(w, y0);
+  ctx.lineTo(w, y1); ctx.lineTo(x1, y1); ctx.lineTo(x1, h); ctx.lineTo(x0, h);
+  ctx.lineTo(x0, y1); ctx.lineTo(0, y1); ctx.lineTo(0, y0); ctx.lineTo(x0, y0);
+  ctx.closePath();
+}
+
+function quadPath(ctx: CanvasRenderingContext2D, w: number, h: number, topInset: number, bottomInset: number) {
+  ctx.beginPath();
+  ctx.moveTo(w * topInset, 0);
+  ctx.lineTo(w * (1 - topInset), 0);
+  ctx.lineTo(w * (1 - bottomInset), h);
+  ctx.lineTo(w * bottomInset, h);
+  ctx.closePath();
+}
+
+function burstPath(ctx: CanvasRenderingContext2D, w: number, h: number, points: number, innerRatio: number, seed = 3) {
+  const n = Math.max(4, Math.round(points));
+  const jitter = (i: number) => {
+    const v = Math.sin((i + 1) * 12.9898 + (seed || 1) * 78.233) * 43758.5453;
+    return v - Math.floor(v);
+  };
+  const cx = w / 2, cy = h / 2;
+  ctx.beginPath();
+  for (let i = 0; i < n * 2; i++) {
+    const ang = (i / (n * 2)) * Math.PI * 2 - Math.PI / 2;
+    const outer = i % 2 === 0;
+    const f = outer ? 1 : Math.max(0.12, Math.min(0.9, innerRatio)) * (0.82 + jitter(i) * 0.34);
+    const px = cx + Math.cos(ang) * (w / 2) * f;
+    const py = cy + Math.sin(ang) * (h / 2) * f;
+    i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+  }
+  ctx.closePath();
+}
+
+function heartPath(ctx: CanvasRenderingContext2D, w: number, h: number) {
+  const x = 0, y = h * 0.08;
+  ctx.beginPath();
+  ctx.moveTo(w / 2, y + h * 0.22);
+  ctx.bezierCurveTo(w * 0.18, y - h * 0.12, x - w * 0.06, y + h * 0.42, w / 2, h);
+  ctx.bezierCurveTo(w * 1.06, y + h * 0.42, w * 0.82, y - h * 0.12, w / 2, y + h * 0.22);
+  ctx.closePath();
+}
+
+function cloudPath(ctx: CanvasRenderingContext2D, w: number, h: number) {
+  ctx.beginPath();
+  ctx.arc(w * 0.28, h * 0.62, h * 0.3, Math.PI * 0.5, Math.PI * 1.5);
+  ctx.arc(w * 0.48, h * 0.42, h * 0.34, Math.PI * 1.05, Math.PI * 1.85);
+  ctx.arc(w * 0.7, h * 0.56, h * 0.28, Math.PI * 1.4, Math.PI * 0.42);
+  ctx.arc(w * 0.52, h * 0.72, h * 0.24, Math.PI * 0.05, Math.PI * 0.95);
+  ctx.closePath();
+}
+
+function wavePath(ctx: CanvasRenderingContext2D, w: number, h: number, cycles: number) {
+  const n = Math.max(1, Math.round(cycles));
+  const steps = 48;
+  ctx.beginPath();
+  ctx.moveTo(0, h);
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps;
+    const y = h / 2 - Math.sin(t * Math.PI * 2 * n) * (h * 0.42);
+    ctx.lineTo(t * w, y);
+  }
+  ctx.lineTo(w, h);
+  ctx.closePath();
+}
+
+function pillArrowPath(ctx: CanvasRenderingContext2D, w: number, h: number) {
+  const r = h / 2;
+  const headW = Math.min(w * 0.34, h * 0.9);
+  ctx.beginPath();
+  ctx.moveTo(r, 0);
+  ctx.lineTo(w - headW, 0);
+  ctx.lineTo(w - headW, -h * 0.22);
+  ctx.lineTo(w, h / 2);
+  ctx.lineTo(w - headW, h * 1.22);
+  ctx.lineTo(w - headW, h);
+  ctx.lineTo(r, h);
+  ctx.arc(0, r, r, Math.PI / 2, Math.PI * 1.5, true);
+  ctx.closePath();
+}
+
 // ───────────────────────────── Effects ──────────────────────────────
 
-export function buildFilter(layer: Layer, effects: Effect[], time: number, quality: number): string {
+export function motionFx(layer: Layer, time: number) {
+  let scale = 1, x = 0, y = 0;
+  for (const e of layer.effects ?? []) {
+    if (!e.enabled) continue;
+    const a = e.amount;
+    const speed = e.speed ?? 1;
+    if (e.type === 'wiggle') {
+      x += Math.sin(time * speed * 3.1) * (a / 100) * 42;
+      y += Math.cos(time * speed * 2.6) * (a / 100) * 28;
+    } else if (e.type === 'drift') {
+      x += Math.sin(time * speed * 0.9) * (a / 100) * 90;
+      y += Math.cos(time * speed * 0.7) * (a / 100) * 60;
+    } else if (e.type === 'beatPulse') {
+      const beat = Math.max(0, Math.sin(time * speed * Math.PI * 2));
+      scale *= 1 + beat * (a / 100) * 0.24;
+    }
+  }
+  return { scale, x, y };
+}
+
+function buildFilter(layer: Layer, effects: Effect[], time: number, quality: number): string {
   const parts: string[] = [];
   const r = resolveLayer(layer, time);
   if (r.blur > 0) parts.push(`blur(${(r.blur * quality).toFixed(2)}px)`);
@@ -191,6 +365,10 @@ export function buildFilter(layer: Layer, effects: Effect[], time: number, quali
       case 'invert': parts.push(`invert(${Math.min(100, a)}%)`); break;
       case 'pixelate': parts.push(`contrast(${100 + a / 2}%) blur(${(a / 30) * pulse}px)`); break;
       case 'bloom': parts.push(`brightness(${100 + a / 3}%) saturate(${120 + a / 2}%)`); break;
+      case 'thermal': parts.push(`hue-rotate(${180 + a * 1.2}deg) saturate(${160 + a}%) contrast(${115 + a / 3}%)`); break;
+      case 'posterize': parts.push(`contrast(${100 + a * 1.4}%) saturate(${100 + a / 2}%) brightness(${100 + a / 5}%)`); break;
+      case 'hologram': parts.push(`saturate(${140 + a / 2}%) hue-rotate(${160 + a}deg) brightness(${104 + a / 6}%)`); break;
+      case 'vhs': parts.push(`saturate(${115 + a / 4}%) contrast(${102 + a / 8}%)`); break;
       default: break;
     }
   }
@@ -266,6 +444,87 @@ function drawEffectOverlays(ctx: CanvasRenderingContext2D, layer: Layer, time: n
         grad.addColorStop(1, `rgba(0,0,0,${Math.min(0.9, e.amount / 100)})`);
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, w, h);
+        break;
+      }
+      case 'duotone': {
+        const g = ctx.createLinearGradient(0, 0, w, h);
+        g.addColorStop(0, e.color || '#8b5cf6');
+        g.addColorStop(1, e.color2 || '#22d3ee');
+        ctx.save();
+        ctx.globalCompositeOperation = 'color';
+        ctx.globalAlpha = Math.min(1, e.amount / 70);
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, w, h);
+        ctx.globalCompositeOperation = 'overlay';
+        ctx.globalAlpha = Math.min(0.5, e.amount / 220);
+        ctx.fillRect(0, 0, w, h);
+        ctx.restore();
+        break;
+      }
+      case 'hologram': {
+        ctx.save();
+        const sheen = ((time * (e.speed ?? 0.6)) % 1);
+        const g = ctx.createLinearGradient(0, 0, w, h);
+        g.addColorStop(0, 'rgba(34,211,238,0.10)');
+        g.addColorStop(Math.max(0, sheen - 0.12), 'rgba(232,121,249,0.05)');
+        g.addColorStop(Math.min(1, sheen), `rgba(255,255,255,${Math.min(0.5, e.amount / 160)})`);
+        g.addColorStop(1, 'rgba(34,211,238,0.06)');
+        ctx.globalCompositeOperation = 'screen';
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, w, h);
+        ctx.globalAlpha = 0.22;
+        ctx.fillStyle = 'rgba(0,0,0,1)';
+        const gap = Math.max(2, 6 - e.amount / 22);
+        for (let y = (time * 18) % gap; y < h; y += gap) ctx.fillRect(0, y, w, 1);
+        ctx.restore();
+        break;
+      }
+      case 'vhs': {
+        ctx.save();
+        ctx.globalAlpha = Math.min(0.35, e.amount / 260);
+        ctx.fillStyle = '#000';
+        for (let y = 0; y < h; y += 3) ctx.fillRect(0, y, w, 1);
+        const bandY = (time * (e.speed ?? 40) * 6) % (h + 120) - 60;
+        ctx.globalAlpha = Math.min(0.22, e.amount / 340);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, bandY, w, 18);
+        ctx.globalAlpha = Math.min(0.16, e.amount / 500);
+        ctx.fillStyle = '#22d3ee';
+        ctx.fillRect(0, bandY + 4, w, 3);
+        ctx.fillStyle = '#f43f5e';
+        ctx.fillRect(0, bandY + 9, w, 2);
+        ctx.restore();
+        break;
+      }
+      case 'halftone': {
+        ctx.save();
+        ctx.globalAlpha = Math.min(0.55, e.amount / 160);
+        ctx.fillStyle = e.color || '#0b0b12';
+        const step = Math.max(3, 12 - e.amount / 12);
+        for (let y = 0; y < h; y += step) {
+          for (let x = (Math.round(y / step) % 2) * (step / 2); x < w; x += step) {
+            const r = (step / 2) * (0.4 + 0.5 * Math.abs(Math.sin(x * 0.05 + y * 0.04 + time * 0.6)));
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+        ctx.restore();
+        break;
+      }
+      case 'spotlight': {
+        const ang = time * (e.speed ?? 0.4);
+        const cx = w * (0.5 + Math.cos(ang) * 0.32);
+        const cy = h * (0.5 + Math.sin(ang * 1.3) * 0.3);
+        const g = ctx.createRadialGradient(cx, cy, Math.min(w, h) * 0.04, cx, cy, Math.max(w, h) * 0.72);
+        const strength = Math.min(0.95, e.amount / 100);
+        g.addColorStop(0, 'rgba(255,255,255,0)');
+        g.addColorStop(0.55, `rgba(0,0,0,${strength * 0.35})`);
+        g.addColorStop(1, `rgba(0,0,0,${strength})`);
+        ctx.save();
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, w, h);
+        ctx.restore();
         break;
       }
       case 'noise': case 'grain': {
@@ -451,7 +710,8 @@ export function drawLayer(ctx: CanvasRenderingContext2D, project: Project, layer
   ctx.globalAlpha = r.opacity;
   ctx.globalCompositeOperation = layer.blendMode as GlobalCompositeOperation;
   const m = localMatrix(layer, time);
-  ctx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
+  const fx = motionFx(layer, time);
+  ctx.transform(m[0] * fx.scale, m[1], m[2], m[3] * fx.scale, m[4] + fx.x, m[5] + fx.y);
   if (r.skewX || r.skewY) { /* skew baked into matrix */ }
   const filter = buildFilter(layer, layer.effects, time, quality);
   if (filter !== 'none') ctx.filter = filter;
@@ -477,14 +737,15 @@ export function drawLayer(ctx: CanvasRenderingContext2D, project: Project, layer
   } else if (layer.type === 'image' || layer.type === 'video' || layer.type === 'lottie') {
     const video = layer.type === 'video' && layer.media?.src ? getVideo(layer.media.src) : null;
     const img = !video && layer.media?.src ? getImage(layer.media.src) : null;
-    const source: CanvasImageSource | null = video ?? img;
+    const cut = video ? null : getCutout(layer);
+    const source: CanvasImageSource | null = cut ?? video ?? img;
     if (source) {
       if (video) syncVideo(video, layer, time);
       ctx.save();
       roundRectPath(ctx, r.w, r.h, r.cornerRadius);
       ctx.clip();
-      const sw = video ? (video.videoWidth || r.w) : (img as HTMLImageElement).width;
-      const sh = video ? (video.videoHeight || r.h) : (img as HTMLImageElement).height;
+      const sw = cut ? cut.width : video ? (video.videoWidth || r.w) : (img as HTMLImageElement).width;
+      const sh = cut ? cut.height : video ? (video.videoHeight || r.h) : (img as HTMLImageElement).height;
       const fit = layer.media?.fit ?? 'cover';
       const scale = fit === 'contain' ? Math.min(r.w / sw, r.h / sh) : fit === 'fill' ? 1 : Math.max(r.w / sw, r.h / sh);
       const dw = fit === 'fill' ? r.w : sw * scale;
@@ -538,6 +799,22 @@ export function drawLayer(ctx: CanvasRenderingContext2D, project: Project, layer
         break;
       }
       case 'roundedRect': roundRectPath(ctx, r.w, r.h, r.cornerRadius ?? Math.min(r.w, r.h) * 0.18); break;
+      case 'capsule': roundRectPath(ctx, r.w, r.h, Math.min(r.w, r.h) / 2); break;
+      case 'squircle': roundRectPath(ctx, r.w, r.h, Math.min(r.w, r.h) * 0.34); break;
+      case 'octagon': polygonPath(ctx, r.w, r.h, 8); break;
+      case 'pentagon': polygonPath(ctx, r.w, r.h, 5); break;
+      case 'ring': ringPath(ctx, r.w, r.h, layer.innerRadius ?? 0.55); break;
+      case 'halfCircle': halfCirclePath(ctx, r.w, r.h); break;
+      case 'quarterCircle': quarterCirclePath(ctx, r.w, r.h); break;
+      case 'chevron': chevronPath(ctx, r.w, r.h, layer.innerRadius ?? 0.4); break;
+      case 'cross': crossPath(ctx, r.w, r.h, layer.innerRadius ?? 0.34); break;
+      case 'parallelogram': quadPath(ctx, r.w, r.h, 0.22, 0.22); break;
+      case 'trapezoid': quadPath(ctx, r.w, r.h, 0.18, -0.18); break;
+      case 'burst': burstPath(ctx, r.w, r.h, layer.points ?? 12, layer.innerRadius ?? 0.62, layer.meta?.seed as number | undefined); break;
+      case 'heart': heartPath(ctx, r.w, r.h); break;
+      case 'cloud': cloudPath(ctx, r.w, r.h); break;
+      case 'wave': wavePath(ctx, r.w, r.h, layer.points ?? 4); break;
+      case 'pillArrow': pillArrowPath(ctx, r.w, r.h); break;
       default: roundRectPath(ctx, r.w, r.h, 0);
     }
     if (kind === 'line') {

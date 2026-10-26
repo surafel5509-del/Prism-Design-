@@ -74,7 +74,10 @@ export function AISettingsPage() {
         <span className="grid h-8 w-8 place-items-center rounded-xl bg-violet-500/20 ring-1 ring-violet-400/30"><KeyRound className="h-4 w-4 text-violet-200" /></span>
         <div className="min-w-0">
           <p className="text-[12.5px] font-semibold tracking-tight">Bring your own intelligence</p>
-          <p className="text-[10px] text-muted-foreground">{connectedProviders.length} of 11 providers connected · keys encrypted server-side · real streaming tool-calling</p>
+          <p className="text-[10px] text-muted-foreground">
+            {connectedProviders.length} of {data?.catalog.length ?? 12} providers ready
+            {data?.managedCount ? ` · ${data.managedCount} built-in included` : ''} · keys encrypted server-side · real streaming tool-calling
+          </p>
         </div>
         <div className="ml-auto flex items-center gap-1.5">
           {savedFlash && <span className="flex items-center gap-1 text-[10px] text-emerald-300"><Check className="h-3 w-3" /> Saved</span>}
@@ -90,7 +93,7 @@ export function AISettingsPage() {
       {error && <div className="rounded-lg border border-rose-400/25 bg-rose-500/[0.07] px-3 py-2 text-[10.5px] text-rose-200">{error}</div>}
 
       <section>
-        <SectionHead icon={<Zap className="h-3.5 w-3.5" />} title="Providers" hint="Connect at least one. OpenAI and Google unlock image generation; OpenAI unlocks speech." />
+        <SectionHead icon={<Zap className="h-3.5 w-3.5" />} title="Providers" hint="Prism AI Cloud is included and ready. Connect your own keys for image generation, speech and extra quota." />
         {loading && !data ? (
           <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-[148px] rounded-2xl" />)}

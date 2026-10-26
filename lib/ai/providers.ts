@@ -13,6 +13,9 @@ export interface ProviderDef {
   customBaseUrl?: boolean;
   accent: string;
   requiresKey?: boolean;
+  /** Servers may supply a shared key from env, so the provider works out of the box. */
+  managed?: boolean;
+  managedEnv?: string[];
 }
 
 const caps = (...c: ModelInfo['capabilities']) => c;
@@ -31,6 +34,19 @@ export const PROVIDERS: ProviderDef[] = [
       { id: 'o1', name: 'o1 (reasoning)', provider: 'openai', contextWindow: 200000, capabilities: caps('reasoning', 'vision'), inputCost: 15, outputCost: 60, curated: true },
       { id: 'gpt-image-1', name: 'GPT Image 1', provider: 'openai', contextWindow: 0, capabilities: caps('image'), inputCost: 0, outputCost: 0, curated: true },
       { id: 'tts-1', name: 'TTS-1 (speech)', provider: 'openai', contextWindow: 0, capabilities: caps('audio'), inputCost: 0, outputCost: 0, curated: true },
+    ],
+  },
+  {
+    id: 'opencode', name: 'Prism AI Cloud', blurb: 'Hosted gateway — Kimi K2.6, Claude, GPT & Gemini', docs: 'https://opencode.ai', 
+    keyPrefix: 'oc_sk_', baseUrl: 'https://opencode.ai/inference/openai/v1', modelsEndpoint: 'https://opencode.ai/inference/openai/v1/models',
+    defaultModel: 'kimi-k2.6', accent: '#7c5cff', managed: true, managedEnv: ['PRISM_AI_API_KEY', 'OPENCODE_API_KEY'], customBaseUrl: true,
+    curated: [
+      { id: 'kimi-k2.6', name: 'Kimi K2.6 (agentic)', provider: 'opencode', contextWindow: 262144, capabilities: caps('tools', 'vision'), inputCost: 0.6, outputCost: 2.5, curated: true },
+      { id: 'kimi-k2', name: 'Kimi K2', provider: 'opencode', contextWindow: 131072, capabilities: caps('tools'), inputCost: 0.6, outputCost: 2.5, curated: true },
+      { id: 'claude-sonnet-4-5', name: 'Claude Sonnet 4.5 (routed)', provider: 'opencode', contextWindow: 200000, capabilities: caps('tools', 'vision', 'reasoning'), inputCost: 3, outputCost: 15, curated: true },
+      { id: 'gpt-5', name: 'GPT-5 (routed)', provider: 'opencode', contextWindow: 400000, capabilities: caps('tools', 'vision', 'reasoning'), inputCost: 1.25, outputCost: 10, curated: true },
+      { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro (routed)', provider: 'opencode', contextWindow: 1048576, capabilities: caps('tools', 'vision', 'reasoning'), inputCost: 1.25, outputCost: 10, curated: true },
+      { id: 'deepseek-v3.2', name: 'DeepSeek V3.2 (routed)', provider: 'opencode', contextWindow: 163840, capabilities: caps('tools', 'reasoning'), inputCost: 0.28, outputCost: 0.42, curated: true },
     ],
   },
   {
@@ -57,6 +73,7 @@ export const PROVIDERS: ProviderDef[] = [
   {
     id: 'openrouter', name: 'OpenRouter', blurb: 'One key, 300+ routed models', docs: 'https://openrouter.ai/keys',
     keyPrefix: 'sk-or-', baseUrl: 'https://openrouter.ai/api/v1', modelsEndpoint: 'https://openrouter.ai/api/v1/models', defaultModel: 'anthropic/claude-sonnet-4', accent: '#8b5cf6',
+    managed: true, managedEnv: ['OPENROUTER_API_KEY'], customBaseUrl: true,
     curated: [
       { id: 'anthropic/claude-sonnet-4', name: 'Claude Sonnet 4 (routed)', provider: 'openrouter', contextWindow: 200000, capabilities: caps('tools', 'vision'), inputCost: 3, outputCost: 15, curated: true },
       { id: 'openai/gpt-4.1', name: 'GPT-4.1 (routed)', provider: 'openrouter', contextWindow: 1047576, capabilities: caps('tools', 'vision'), inputCost: 2, outputCost: 8, curated: true },
@@ -135,7 +152,7 @@ export function supportsTools(provider: string, modelId: string): boolean {
   const m = findModel(provider, modelId);
   if (m) return m.capabilities.includes('tools');
   // Unknown (live-fetched) models: assume tool support for major providers.
-  return ['openai', 'anthropic', 'google', 'openrouter', 'deepseek', 'groq', 'together', 'fireworks', 'ollama', 'lmstudio', 'custom'].includes(provider);
+  return ['openai', 'anthropic', 'google', 'openrouter', 'opencode', 'deepseek', 'groq', 'together', 'fireworks', 'ollama', 'lmstudio', 'custom'].includes(provider);
 }
 
 export function supportsVision(provider: string, modelId: string): boolean {

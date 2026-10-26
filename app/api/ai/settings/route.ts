@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { ensureUserId, jsonError } from '@/lib/server/session';
 import { getUser, saveUser } from '@/lib/server/store';
-import { settingsOf } from '@/lib/server/ai-config';
+import { isConnected, settingsOf } from '@/lib/server/ai-config';
 import { PROVIDERS } from '@/lib/ai/providers';
 
 export const runtime = 'nodejs';
@@ -48,7 +48,7 @@ export async function PATCH(req: Request) {
 
   const next = settingsOf(user);
   if (patch.defaultProvider) {
-    if (!user.providers?.[patch.defaultProvider]?.connected) return jsonError('That provider is not connected yet.', 400, { code: 'not_connected' });
+    if (!isConnected(user, patch.defaultProvider)) return jsonError('That provider is not connected yet.', 400, { code: 'not_connected' });
   }
   Object.assign(next, patch);
   next.temperature = Math.max(0, Math.min(2, next.temperature));

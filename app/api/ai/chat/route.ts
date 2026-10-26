@@ -6,7 +6,7 @@ import { normalizeLayer } from '@/lib/engine/ops';
 import { createToolbelt } from '@/lib/ai/tools';
 import { buildSystemPrompt } from '@/lib/ai/system-prompt';
 import { languageModel, fetchModels, generateImage, generateSpeechOpenAI } from '@/lib/ai/runtime';
-import { getProvider, findModel, estimateCost } from '@/lib/ai/providers';
+import { getProvider, findModel, estimateCost, supportsTools as providerSupportsTools } from '@/lib/ai/providers';
 import { ensureUserId, jsonError } from '@/lib/server/session';
 import { getUser, audit } from '@/lib/server/store';
 import { resolveTarget, capabilities, settingsOf, isConnected, recordUsage, recordRun, providerErrorMessage, type Target } from '@/lib/server/ai-config';
@@ -106,9 +106,11 @@ export async function POST(req: Request) {
     }
   }
 
-  if (!settings.toolCalling && !findModel(target.provider, target.model)?.capabilities.includes('tools')) {
-    return jsonError(`The selected model (${target.model}) does not support tool calling. Pick a tool-capable model in the AI panel.`, 400, { code: 'no_tools' });
-  }
+  const knownModel = findModel(target.provider, target.model);
+  const modelSupportsTools = knownModel ? knownModel.capabilities.includes('tools') : providerSupportsTools(target.provider, target.model);
+  // Tool calling is how the agent edits the document. If the model can't do it we
+  // still run, but as a plain streaming chat with an explicit note (never silently fake).
+  const useTools = settings.toolCalling && modelSupportsTools;
 
   const project = asProject(parsed.project);
   const caps = capabilities(user);
@@ -148,14 +150,20 @@ export async function POST(req: Request) {
     } : undefined,
   });
 
-  const system = buildSystemPrompt({
+  const systemBase = buildSystemPrompt({
     project, mode, outputKind, settings,
     hasVision: caps.vision, hasImageGen: caps.imageGen, hasSpeech: caps.speech,
     provider: getProvider(target.provider)?.name ?? target.provider,
     model: target.model,
   });
+  const system = useTools
+    ? systemBase
+    : `${systemBase}
 
-  const maxSteps = mode === 'thinking' ? 32 : mode === 'fast' ? 10 : 24;
+## Important: this model cannot call tools
+The selected model (${target.model}) does not support tool calling, so you cannot mutate the document on this run. Reply as a senior art director would in chat: give a precise, buildable design/motion spec (layout, palette, type, timing), and tell the user to switch to a tool-capable model (e.g. Kimi K2.6, Claude Sonnet, GPT-4.1) in the model picker to have Prism build it. Never claim you edited anything.`;
+
+  const maxSteps = useTools ? (mode === 'thinking' ? 32 : mode === 'fast' ? 10 : 24) : 1;
   const messages = toCoreMessages(parsed.messages);
 
   let tokensIn = 0;
@@ -168,7 +176,7 @@ export async function POST(req: Request) {
       model: languageModel({ provider: target.provider, model: target.model, apiKey: target.apiKey, baseUrl: target.baseUrl }),
       system,
       messages,
-      tools: toolbelt.tools,
+      ...(useTools ? { tools: toolbelt.tools } : {}),
       maxSteps,
       temperature: Math.max(0, Math.min(2, settings.temperature)),
       topP: Math.max(0.05, Math.min(1, settings.topP)),
@@ -205,7 +213,7 @@ export async function POST(req: Request) {
         'x-prism-provider': target.provider,
         'x-prism-model': target.model,
         'x-prism-fallback': usedFallback ? '1' : '0',
-        'x-prism-tools': String(toolbelt.toolNames.length),
+        'x-prism-tools': String(useTools ? toolbelt.toolNames.length : 0),
         'cache-control': 'no-store',
       },
       getErrorMessage: (error) => providerErrorMessage(error, target!.provider),

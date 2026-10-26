@@ -3,6 +3,7 @@ import * as React from 'react';
 import { useEditor } from '@/lib/store/editor';
 import type { Effect, EffectType } from '@/lib/engine/types';
 import { ANIMATION_PRESETS, applyPresetToLayer } from '@/lib/engine/presets';
+import { EffectThumb, MotionPresetGrid } from '@/components/editor/EffectPreviews';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
@@ -13,6 +14,7 @@ import { cn } from '@/lib/utils';
 import {
   Sparkles, Droplets, Sun, Contrast, Palette, Aperture, Zap, Film, ScanLine, CircleDot, Waves,
   Trash2, Plus, Wand2, ArrowUp, ArrowDown, RotateCw, Activity, Layers, Type, Maximize, Eye,
+  Thermometer, SlidersHorizontal, Grid2x2, Glasses, Lightbulb, Move3d, Move, Wind, Disc3,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -21,6 +23,7 @@ const EFFECTS: { type: EffectType; label: string; amount: number; group: string;
   { type: 'bloom', label: 'Bloom', amount: 40, group: 'Focus', icon: Sun },
   { type: 'glow', label: 'Glow', amount: 45, group: 'Focus', icon: Sparkles },
   { type: 'shadow', label: 'Drop Shadow', amount: 30, group: 'Focus', icon: Layers },
+  { type: 'dropShadow', label: 'Hard Shadow', amount: 55, group: 'Focus', icon: Layers },
   { type: 'brightness', label: 'Brightness', amount: 20, group: 'Colour', icon: Sun },
   { type: 'contrast', label: 'Contrast', amount: 25, group: 'Colour', icon: Contrast },
   { type: 'saturate', label: 'Saturate', amount: 40, group: 'Colour', icon: Palette },
@@ -28,14 +31,27 @@ const EFFECTS: { type: EffectType; label: string; amount: number; group: string;
   { type: 'grayscale', label: 'Grayscale', amount: 100, group: 'Colour', icon: CircleDot },
   { type: 'sepia', label: 'Sepia', amount: 80, group: 'Colour', icon: Sun },
   { type: 'invert', label: 'Invert', amount: 100, group: 'Colour', icon: Contrast },
-  { type: 'chromatic', label: 'Chromatic Aberration', amount: 12, group: 'Stylise', icon: Zap },
+  { type: 'duotone', label: 'Duotone', amount: 70, group: 'Colour', icon: Palette },
+  { type: 'thermal', label: 'Thermal Map', amount: 60, group: 'Colour', icon: Thermometer },
+  { type: 'posterize', label: 'Posterize', amount: 45, group: 'Colour', icon: SlidersHorizontal },
+  { type: 'chromatic', label: 'Chromatic', amount: 12, group: 'Stylise', icon: Zap },
   { type: 'grain', label: 'Film Grain', amount: 22, group: 'Stylise', icon: Film },
   { type: 'noise', label: 'Noise', amount: 15, group: 'Stylise', icon: Activity },
   { type: 'vignette', label: 'Vignette', amount: 45, group: 'Stylise', icon: Eye },
   { type: 'scanlines', label: 'Scanlines', amount: 30, group: 'Stylise', icon: ScanLine },
-  { type: 'lightSweep', label: 'Light Sweep', amount: 55, group: 'Stylise', icon: Waves },
+  { type: 'halftone', label: 'Halftone', amount: 40, group: 'Stylise', icon: Grid2x2 },
+  { type: 'hologram', label: 'Hologram', amount: 55, group: 'Stylise', icon: Glasses },
+  { type: 'vhs', label: 'VHS Tape', amount: 50, group: 'Stylise', icon: Film },
+  { type: 'lightSweep', label: 'Light Sweep', amount: 55, group: 'Light', icon: Waves },
+  { type: 'spotlight', label: 'Spotlight', amount: 70, group: 'Light', icon: Lightbulb },
   { type: 'pixelate', label: 'Pixelate', amount: 25, group: 'Distort', icon: Maximize },
+  { type: 'displacement', label: 'Displace', amount: 30, group: 'Distort', icon: Move3d },
+  { type: 'wiggle', label: 'Wiggle', amount: 30, group: 'Motion', icon: Move },
+  { type: 'drift', label: 'Drift', amount: 35, group: 'Motion', icon: Wind },
+  { type: 'beatPulse', label: 'Beat Pulse', amount: 40, group: 'Motion', icon: Disc3 },
 ];
+
+const GROUPS = ['All', 'Focus', 'Colour', 'Stylise', 'Light', 'Distort', 'Motion'] as const;
 
 export function EffectsPanel() {
   const selection = useEditor((s) => s.selection);
@@ -45,7 +61,7 @@ export function EffectsPanel() {
   const removeEffect = useEditor((s) => s.removeEffect);
   const updateLayer = useEditor((s) => s.updateLayer);
   const setRightTab = useEditor((s) => s.setRightTab);
-  const [group, setGroup] = React.useState<'All' | 'Focus' | 'Colour' | 'Stylise' | 'Distort'>('All');
+  const [group, setGroup] = React.useState<(typeof GROUPS)[number]>('All');
   const selected = layers.find((l) => l.id === selection[0]);
 
   const applyAnimation = (presetId: string) => {
@@ -65,7 +81,7 @@ export function EffectsPanel() {
       <div className="border-b border-border/60 px-2 py-2">
         <p className="panel-title mb-1.5">Effect library</p>
         <div className="flex flex-wrap gap-1">
-          {(['All', 'Focus', 'Colour', 'Stylise', 'Distort'] as const).map((g) => (
+          {GROUPS.map((g) => (
             <button key={g} onClick={() => setGroup(g)} className={cn('rounded-full border px-1.5 py-0.5 text-[9.5px]', group === g ? 'border-violet-500/50 bg-violet-500/15 text-violet-300' : 'border-border text-muted-foreground hover:text-foreground')}>{g}</button>
           ))}
         </div>
@@ -76,11 +92,15 @@ export function EffectsPanel() {
             <button
               key={e.type}
               disabled={!selected}
-              onClick={() => { if (selected) { addEffect(selected.id, e.type, e.amount); toast.success(`${e.label} added`); } }}
-              className="group flex flex-col items-start gap-1 rounded-lg border border-border/60 bg-background/30 p-2 text-left transition-colors hover:border-violet-500/40 hover:bg-violet-500/[0.06] disabled:cursor-not-allowed disabled:opacity-45"
+              onClick={() => { if (selected) { addEffect(selected.id, e.type, e.amount); toast.success(`${e.label} added`, { description: 'Live preview updates on the canvas.' }); } }}
+              title={`${e.label} · ${e.group}`}
+              className="group relative overflow-hidden rounded-lg border border-border/60 bg-background/30 text-left transition-all hover:-translate-y-0.5 hover:border-violet-500/45 hover:shadow-[0_10px_26px_-18px_rgba(139,92,246,.9)] disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:translate-y-0"
             >
-              <span className="flex h-6 w-6 items-center justify-center rounded-md bg-violet-500/10 text-violet-300"><e.icon className="h-3 w-3" /></span>
-              <span className="text-[9.5px] leading-tight text-foreground/85">{e.label}</span>
+              <EffectThumb type={e.type} />
+              <span className="flex items-center gap-1 px-1.5 py-1">
+                <e.icon className="h-2.5 w-2.5 shrink-0 text-violet-300/80" />
+                <span className="truncate text-[9px] leading-tight text-foreground/85">{e.label}</span>
+              </span>
             </button>
           ))}
         </div>
@@ -113,18 +133,12 @@ export function EffectsPanel() {
           {(['In', 'Out', 'Loop', 'Emphasis'] as const).map((g) => (
             <div key={g} className="mb-1.5">
               <p className="mb-1 text-[8.5px] uppercase tracking-wider text-muted-foreground/70">{g}</p>
-              <div className="grid grid-cols-2 gap-1">
-                {ANIMATION_PRESETS.filter((p) => p.group === g).map((p) => (
-                  <Tooltip key={p.id}>
-                    <TooltipTrigger asChild>
-                      <button onClick={() => applyAnimation(p.id)} className="flex items-center gap-1 rounded-md border border-border/50 bg-background/30 px-1.5 py-1 text-left text-[9px] transition-colors hover:border-violet-500/40 hover:text-violet-300">
-                        <span className="text-[10px] text-violet-400">{p.icon}</span><span className="truncate">{p.name}</span>
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent>{p.description}</TooltipContent>
-                  </Tooltip>
-                ))}
-              </div>
+              <MotionPresetGrid
+                presets={ANIMATION_PRESETS.filter((p) => p.group === g)}
+                onApply={applyAnimation}
+                disabled={!selected}
+                columns={2}
+              />
             </div>
           ))}
         </div>

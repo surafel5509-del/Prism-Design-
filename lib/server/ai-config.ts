@@ -10,18 +10,54 @@ export function settingsOf(user: UserRecord): AISettings {
   return { ...DEFAULT_SETTINGS, ...(user.settings ?? {}), taskProviders: { ...DEFAULT_SETTINGS.taskProviders, ...(user.settings?.taskProviders ?? {}) } };
 }
 
+/** Keys the server itself owns, so managed providers work before the user adds anything. */
+export function serverKey(providerId: string): string | null {
+  const def = getProvider(providerId);
+  if (!def?.managed) return null;
+  for (const name of def.managedEnv ?? []) {
+    const value = process.env[name];
+    if (value && value.trim().length > 8) return value.trim();
+  }
+  return null;
+}
+
+export function managedBaseUrl(providerId: string): string | undefined {
+  const def = getProvider(providerId);
+  if (providerId === 'opencode') return process.env.PRISM_AI_BASE_URL || def?.baseUrl;
+  if (providerId === 'openrouter') return process.env.OPENROUTER_BASE_URL || def?.baseUrl;
+  return def?.baseUrl;
+}
+
+export function managedModel(providerId: string): string | undefined {
+  if (providerId === 'opencode') return process.env.PRISM_AI_MODEL || undefined;
+  if (providerId === 'openrouter') return process.env.OPENROUTER_MODEL || undefined;
+  return undefined;
+}
+
+/** Every provider the server can serve without user input, in priority order. */
+export function managedProviders(): string[] {
+  return ['opencode', 'openrouter'].filter((id) => Boolean(serverKey(id)));
+}
+
 export function unlockedKey(user: UserRecord, providerId: string): string | null {
   const p = user.providers?.[providerId];
-  if (!p || !p.connected) return null;
-  if (!p.key) return getProvider(providerId)?.requiresKey === false ? '' : null;
-  try { return decryptSecret(p.key); } catch { return null; }
+  if (p?.connected) {
+    if (!p.key) {
+      if (p.managed) return serverKey(providerId);
+      return getProvider(providerId)?.requiresKey === false ? '' : null;
+    }
+    try { return decryptSecret(p.key); } catch { /* fall through to managed key */ }
+  }
+  return serverKey(providerId);
 }
 
 export function isConnected(user: UserRecord, providerId: string): boolean {
   const p = user.providers?.[providerId];
-  if (!p || !p.connected) return false;
-  if (!p.key) return getProvider(providerId)?.requiresKey === false;
-  return true;
+  if (p?.connected) {
+    if (!p.key) return Boolean(p.managed ? serverKey(providerId) : getProvider(providerId)?.requiresKey === false);
+    return true;
+  }
+  return Boolean(serverKey(providerId));
 }
 
 /** Pick the provider for a task: explicit override → per-task preference → account default. */
@@ -32,13 +68,15 @@ export function resolveTarget(user: UserRecord, task: Task = 'chat', override?: 
   const taskPref = settings.taskProviders?.[task];
   if (taskPref?.provider) candidates.push({ provider: taskPref.provider, model: taskPref.model });
   if (settings.defaultProvider) candidates.push({ provider: settings.defaultProvider, model: settings.defaultModel });
+  // Built-in providers keep the agent working out of the box, after any user choice fails.
+  for (const id of managedProviders()) candidates.push({ provider: id, model: managedModel(id) });
   for (const c of candidates) {
     const key = unlockedKey(user, c.provider);
     if (key === null) continue;
     const def = getProvider(c.provider);
-    const model = c.model || def?.defaultModel || settings.defaultModel;
+    const model = c.model || managedModel(c.provider) || def?.defaultModel || settings.defaultModel;
     const store = user.providers[c.provider];
-    return { provider: c.provider, model, apiKey: key, baseUrl: store?.baseUrl || def?.baseUrl };
+    return { provider: c.provider, model, apiKey: key, baseUrl: store?.baseUrl || managedBaseUrl(c.provider) };
   }
   return null;
 }

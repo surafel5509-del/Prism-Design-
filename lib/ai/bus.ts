@@ -4,7 +4,8 @@ export type AgentAction =
   | { type: 'ask'; kind: 'question' | 'approval'; question: string; options: string[]; reason?: string }
   | { type: 'preview'; autoplay?: boolean }
   | { type: 'export'; options: { format: string; preset?: string; fps?: number; scale?: number; transparent?: boolean } }
-  | { type: 'saved'; id: string };
+  | { type: 'saved'; id: string }
+  | { type: 'cutout'; layerId: string };
 
 type Listener = (action: AgentAction) => void;
 const listeners = new Set<Listener>();

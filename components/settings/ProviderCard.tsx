@@ -52,6 +52,7 @@ export function ProviderCard({ catalog, connected, isDefault, onChanged }: {
             <div className="flex items-center gap-1.5">
               <p className="truncate text-[12px] font-semibold tracking-tight">{catalog.name}</p>
               {isDefault && <Badge variant="prism" className="h-4 px-1 text-[8px]">Default</Badge>}
+              {catalog.managed && catalog.managedAvailable && <Badge variant="secondary" className="h-4 px-1 text-[8px]">Built-in</Badge>}
             </div>
             <p className="truncate text-[9.5px] text-muted-foreground">{catalog.blurb}</p>
           </div>
@@ -88,7 +89,7 @@ export function ProviderCard({ catalog, connected, isDefault, onChanged }: {
               {busy ? <Loader2 className="h-2.5 w-2.5 animate-spin" /> : <Star className="h-2.5 w-2.5" />}
             </Button>
           )}
-          {live && (
+          {live && !(connected?.managed && catalog.managedAvailable) && (
             <Button size="xs" variant="ghost" className="h-6 px-1.5 text-muted-foreground hover:text-rose-300" onClick={() => setConfirmRemove(true)} title="Remove provider">
               <Trash2 className="h-2.5 w-2.5" />
             </Button>
@@ -149,7 +150,7 @@ function ConnectDialog({ open, onOpenChange, catalog, connected, onChanged }: {
   };
 
   const save = async (skipValidation = false) => {
-    if (catalog.requiresKey && !apiKey && !connected?.connected) { toast.error('Paste an API key first.'); return; }
+    if (catalog.requiresKey && !apiKey && !connected?.connected && !catalog.managedAvailable) { toast.error('Paste an API key first.'); return; }
     setSaving(true);
     try {
       await connectProvider({ provider: catalog.id, apiKey: apiKey || undefined, baseUrl: baseUrl || undefined, model, setDefault: asDefault, skipValidation });
@@ -178,7 +179,19 @@ function ConnectDialog({ open, onOpenChange, catalog, connected, onChanged }: {
         </div>
 
         <div className="space-y-3 p-4">
-          {connected?.connected && (
+          {catalog.managed && catalog.managedAvailable && !connected?.managed && (
+            <div className="flex items-start gap-2 rounded-lg border border-violet-400/25 bg-violet-500/[0.07] px-2 py-1.5">
+              <Check className="mt-0.5 h-3 w-3 text-violet-300" />
+              <p className="text-[10px] leading-relaxed text-violet-100">Prism’s built-in key is active for this provider. Save without a key to keep using it, or paste your own key to bill your account.</p>
+            </div>
+          )}
+          {connected?.managed && (
+            <div className="flex items-start gap-2 rounded-lg border border-emerald-400/25 bg-emerald-500/[0.06] px-2 py-1.5">
+              <Check className="mt-0.5 h-3 w-3 text-emerald-400" />
+              <p className="text-[10px] leading-relaxed text-emerald-100">Included with Prism — usage is billed to the workspace. Paste a key only if you want your own quota.</p>
+            </div>
+          )}
+          {connected?.connected && !connected.managed && (
             <div className="flex items-center gap-2 rounded-lg border border-emerald-400/25 bg-emerald-500/[0.06] px-2 py-1.5">
               <Check className="h-3 w-3 text-emerald-400" />
               <span className="text-[10px] text-emerald-100">Connected as <span className="font-mono">{connected.keyPreview || 'local endpoint'}</span></span>
