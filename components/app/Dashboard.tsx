@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
-  Activity, Clock, Copy, FolderOpen, LayoutGrid, LayoutTemplate, Loader2, MoreHorizontal, Palette, Pencil, Plus, Search, Sparkles, Trash2, Wand2,
+  Activity, Clock, Copy, FolderOpen, LayoutGrid, LayoutTemplate, Loader2, MoreHorizontal, Palette, Pencil, Plus, Search, Sparkles, Trash2, Wand2, Play,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { AppShell } from '@/components/app/AppShell';
@@ -249,11 +249,12 @@ function ProjectThumb({ project }: { project: Project }) {
 
 function TemplateGallery({ query, onCreate }: { query: string; onCreate: (t: TemplateDef) => Promise<void> }) {
   const [category, setCategory] = useState<string>('All');
+  const [motionOnly, setMotionOnly] = useState(false);
   const [visible, setVisible] = useState(24);
   const all = useMemo(() => getTemplates(), []);
-  const filtered = useMemo(() => all.filter((t) => (category === 'All' || t.category === category) && (!query || t.name.toLowerCase().includes(query.toLowerCase()) || t.tags.some((tag) => tag.includes(query.toLowerCase())))), [all, category, query]);
+  const filtered = useMemo(() => all.filter((t) => (category === 'All' || t.category === category) && (!motionOnly || t.duration >= 12) && (!query || t.name.toLowerCase().includes(query.toLowerCase()) || t.tags.some((tag) => tag.includes(query.toLowerCase())))), [all, category, motionOnly, query]);
 
-  useEffect(() => { setVisible(24); }, [category, query]);
+  useEffect(() => { setVisible(24); }, [category, motionOnly, query]);
 
   return (
     <div>
@@ -261,6 +262,7 @@ function TemplateGallery({ query, onCreate }: { query: string; onCreate: (t: Tem
         {['All', ...TEMPLATE_CATEGORIES].map((cat) => (
           <button key={cat} onClick={() => setCategory(cat)} className={cn('rounded-full border px-2 py-1 text-[10px] transition-colors', category === cat ? 'border-violet-400/40 bg-violet-500/12 text-violet-200' : 'border-border/70 text-muted-foreground hover:text-foreground')}>{cat}</button>
         ))}
+        <button onClick={() => setMotionOnly((v) => !v)} className={cn('flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] transition-colors', motionOnly ? 'border-violet-400/40 bg-violet-500/12 text-violet-200' : 'border-border/70 text-muted-foreground hover:text-foreground')}><Play className={cn('h-2.5 w-2.5', motionOnly && 'fill-current')} /> Motion 15–30s</button>
         <span className="ml-auto self-center text-[9.5px] text-muted-foreground">{filtered.length} templates</span>
       </div>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -279,14 +281,19 @@ function TemplateCard({ template, onCreate }: { template: TemplateDef; onCreate:
   const [rendered, setRendered] = useState<ReturnType<TemplateDef['render']> | null>(null);
   useEffect(() => { try { setRendered(template.render()); } catch { /* noop */ } }, [template]);
   const [busy, setBusy] = useState(false);
+  const [hovering, setHovering] = useState(false);
+  const isMotion = template.duration >= 12;
 
   return (
     <button
+      onMouseEnter={() => setHovering(true)}
+      onMouseLeave={() => setHovering(false)}
       onClick={async () => { setBusy(true); try { await onCreate(template); } finally { setBusy(false); } }}
       className="group overflow-hidden rounded-2xl border border-border/70 bg-white/[0.015] text-left transition-all hover:-translate-y-0.5 hover:border-violet-400/35 hover:shadow-[0_20px_50px_-24px_rgba(124,58,237,.55)]"
     >
       <div className="relative bg-black/40" style={{ aspectRatio: '4 / 3' }}>
-        {rendered ? <SceneCanvas project={{ ...rendered, duration: template.duration }} time={Math.min(1.2, template.duration * 0.4)} className="h-full w-full" quality={0.65} ariaLabel={`${template.name} preview`} /> : <div className="h-full w-full animate-pulse bg-white/[0.03]" />}
+        {rendered ? <SceneCanvas project={{ ...rendered, duration: template.duration }} playing={isMotion && hovering} time={Math.min(1.2, template.duration * 0.4)} className="h-full w-full" quality={0.65} ariaLabel={`${template.name} preview`} /> : <div className="h-full w-full animate-pulse bg-white/[0.03]" />}
+        {isMotion && <span className="absolute bottom-1.5 right-1.5 flex items-center gap-0.5 rounded bg-black/60 px-1 py-0.5 text-[8px] text-white/80 backdrop-blur"><Play className="h-2 w-2 fill-current" /> {template.duration}s</span>}
         <span className="absolute left-1.5 top-1.5 rounded bg-black/60 px-1 py-0.5 text-[8px] text-white/70 backdrop-blur">{template.aspect}</span>
         <span className="absolute right-1.5 top-1.5 rounded bg-black/60 px-1 py-0.5 text-[8px] text-white/70 backdrop-blur">{template.category}</span>
         <span className="absolute inset-0 grid place-items-center bg-violet-950/40 opacity-0 backdrop-blur-[1px] transition-opacity group-hover:opacity-100">
