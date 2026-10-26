@@ -1,0 +1,149 @@
+// PRISM — production Postgres schema (Prisma)
+// Dev/self-host default is the zero-setup file store in src/lib/db.ts.
+// For multi-user production: `npx prisma migrate deploy` with DATABASE_URL set,
+// then re-implement src/lib/db.ts against these models (same function signatures).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String         @id @default(cuid())
+  email         String         @unique
+  name          String?
+  avatarUrl     String?
+  createdAt     DateTime       @default(now())
+  projects      Project[]
+  providerKeys  ProviderKey[]
+  agentRuns     AgentRun[]
+  brandKits     BrandKit[]
+  memberships   Membership[]
+}
+
+model Workspace {
+  id        String       @id @default(cuid())
+  name      String
+  createdAt DateTime     @default(now())
+  members   Membership[]
+  projects  Project[]
+}
+
+model Membership {
+  id          String    @id @default(cuid())
+  userId      String
+  workspaceId String
+  role        String    @default("editor") // owner | editor | viewer
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, workspaceId])
+}
+
+model Project {
+  id          String     @id
+  name        String
+  ownerId     String
+  workspaceId String?
+  /// Full PrismProject JSON document (layers, keyframes, brand kit)
+  document    Json
+  width       Int
+  height      Int
+  duration    Float
+  thumbnailUrl String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  owner       User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  workspace   Workspace? @relation(fields: [workspaceId], references: [id])
+  versions    ProjectVersion[]
+  comments    Comment[]
+
+  @@index([ownerId, updatedAt])
+}
+
+model ProjectVersion {
+  id        String   @id @default(cuid())
+  projectId String
+  document  Json
+  label     String?
+  createdAt DateTime @default(now())
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, createdAt])
+}
+
+model ProviderKey {
+  id         String   @id @default(cuid())
+  userId     String
+  provider   String   // openai | anthropic | google | openrouter | deepseek | groq | together | fireworks | ollama | custom
+  /// AES-256-GCM ciphertext (v1:iv:tag:data) — NEVER plaintext, NEVER returned to clients
+  ciphertext String
+  baseURL    String?
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, provider])
+}
+
+model AgentRun {
+  id               String   @id @default(cuid())
+  userId           String
+  projectId        String?
+  provider         String
+  model            String
+  mode             String   // agent | thinking | fast
+  prompt           String
+  /// Ordered tool calls + results for replay/inspection
+  toolLog          Json     @default("[]")
+  status           String   @default("running") // running | done | error | cancelled
+  promptTokens     Int      @default(0)
+  completionTokens Int      @default(0)
+  totalTokens      Int      @default(0)
+  steps            Int      @default(0)
+  durationMs       Int?
+  error            String?
+  createdAt        DateTime @default(now())
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+model BrandKit {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  colors    String[]
+  fonts     Json
+  voice     String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Asset {
+  id        String   @id @default(cuid())
+  userId    String
+  kind      String   // image | video | audio | svg | lottie | font
+  url       String   // S3/R2 object URL
+  name      String
+  bytes     Int?
+  createdAt DateTime @default(now())
+
+  @@index([userId, kind])
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  projectId String
+  userId    String
+  body      String
+  /// { x, y, time } anchor on the composition
+  anchor    Json?
+  createdAt DateTime @default(now())
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}

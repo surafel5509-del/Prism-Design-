@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-display: "Space Grotesk", "Inter", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+}
+
+html, body { height: 100%; }
+body { @apply bg-ink-950 text-zinc-100 antialiased overflow-x-hidden; }
+body.light { @apply bg-zinc-100 text-zinc-900; }
+
+::selection { background: rgba(124, 58, 237, .45); }
+
+/* slim scrollbars */
+* { scrollbar-width: thin; scrollbar-color: rgba(124,58,237,.5) transparent; }
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-thumb { background: rgba(124,58,237,.45); border-radius: 8px; }
+*::-webkit-scrollbar-track { background: transparent; }
+
+.glass { background: rgba(16,16,28,.72); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,.08); }
+.panel { @apply bg-ink-900 border-white/[.07]; }
+.prism-ring { background: linear-gradient(135deg,#7c3aed,#06b6d4,#d946ef); }
+.prism-text { background: linear-gradient(90deg,#a78bfa,#67e8f9,#f0abfc); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.checker {
+  background-image: linear-gradient(45deg,#2a2a3d 25%,transparent 25%),linear-gradient(-45deg,#2a2a3d 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#2a2a3d 75%),linear-gradient(-45deg,transparent 75%,#2a2a3d 75%);
+  background-size: 16px 16px; background-position: 0 0,0 8px,8px -8px,-8px 0; background-color: #1b1b2b;
+}
+.grid-bg {
+  background-image: linear-gradient(rgba(255,255,255,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.06) 1px,transparent 1px);
+  background-size: 40px 40px;
+}
+input[type="range"] { @apply accent-violet-500; }
+input[type="color"] { -webkit-appearance: none; appearance: none; border: none; padding: 0; background: none; cursor: pointer; }
+input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+input[type="color"]::-webkit-color-swatch { border: 1px solid rgba(255,255,255,.2); border-radius: 6px; }
+
+.kf-diamond { transform: rotate(45deg); }
+.no-select { -webkit-user-select: none; user-select: none; }
+.text-balance { text-wrap: balance; }
+
+@keyframes floaty { 0%,100%{ transform: translateY(0)} 50%{ transform: translateY(-12px)} }
+.animate-floaty { animation: floaty 6s ease-in-out infinite; }
+
+:focus-visible { outline: 2px solid rgba(124,58,237,.8); outline-offset: 1px; }

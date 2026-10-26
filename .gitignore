@@ -1,0 +1,23 @@
+# deps / build
+node_modules/
+.next/
+out/
+build/
+dist/
+
+# env & secrets — NEVER commit real keys
+.env
+.env*.local
+.prism-secret
+
+# local runtime data (encrypted provider keys + projects live here in dev)
+data/
+
+# misc
+.DS_Store
+*.log
+.vercel
+coverage/
+
+# typescript build info
+*.tsbuildinfo
