@@ -712,6 +712,13 @@ export function CanvasStage() {
         <ContextMenuItem disabled={!selection.length} onClick={() => selection.forEach((id) => updateLayer(id, { locked: true }))}><Lock className="h-3.5 w-3.5" /> Lock</ContextMenuItem>
         <ContextMenuItem disabled={!selection.length} onClick={() => selection.forEach((id) => updateLayer(id, { visible: false }))}><EyeOff className="h-3.5 w-3.5" /> Hide</ContextMenuItem>
         <ContextMenuSeparator />
+        <ContextMenuItem
+          disabled={!selection.some((id) => project.layers.find((l) => l.id === id)?.type === 'image')}
+          onClick={() => {
+            const id = selection.find((sid) => project.layers.find((l) => l.id === sid)?.type === 'image');
+            if (id) useEditor.getState().openCutout(id);
+          }}
+        ><Scissors className="h-3.5 w-3.5" /> Remove background… <span className="ml-auto text-[9px] text-muted-foreground">manual</span></ContextMenuItem>
         <ContextMenuItem disabled={!selection.length} onClick={() => selection.forEach((id) => useEditor.getState().keyframeProp(id, 'opacity'))}><Sparkles className="h-3.5 w-3.5" /> Keyframe opacity</ContextMenuItem>
         <ContextMenuItem disabled={!selection.length} onClick={() => useEditor.getState().deleteLayers()} className="text-red-400 focus:bg-red-500/10 focus:text-red-300"><Scissors className="h-3.5 w-3.5" /> Delete <span className="ml-auto"><Kbd>⌫</Kbd></span></ContextMenuItem>
       </ContextMenuContent>

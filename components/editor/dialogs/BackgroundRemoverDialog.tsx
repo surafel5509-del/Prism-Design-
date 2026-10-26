@@ -153,6 +153,18 @@ export function BackgroundRemoverDialog() {
       }
       setSwatches([...buckets.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10).map(([k]) => k));
       render();
+      // Re-open an existing cut-out so the user can refine it instead of starting over.
+      if (layer.cutout?.src) {
+        const maskImg = new Image();
+        maskImg.onload = () => {
+          if (cancelled) return;
+          const mctx = mask.getContext('2d')!;
+          mctx.drawImage(maskImg, 0, 0, w, h);
+          setMode(layer.cutout?.mode === 'keep' ? 'keep' : 'remove');
+          render();
+        };
+        maskImg.src = layer.cutout.src;
+      }
     };
     img.onerror = () => { if (!cancelled) toast.error('Could not load this image'); };
     img.src = layer.media.src;
