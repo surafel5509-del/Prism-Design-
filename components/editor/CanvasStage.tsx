@@ -267,7 +267,12 @@ export function CanvasStage() {
   React.useEffect(() => { drawOverlayNow(); }, [drawOverlayNow, project, view, selection, hover, marquee, snapLines, showGrid, showSafe, showGuides, showRulers]);
 
   // preload media
-  React.useEffect(() => { project.layers.forEach((l) => { if (l.media?.src) preloadImage(l.media.src); }); }, [project.layers]);
+  React.useEffect(() => {
+    project.layers.forEach((l) => {
+      if (l.media?.src) preloadImage(l.media.src);
+      if (l.cutout?.src) preloadImage(l.cutout.src, () => drawSceneAt(time));
+    });
+  }, [project.layers]);
 
   // playback
   React.useEffect(() => {

@@ -28,7 +28,10 @@ export function SceneCanvas({ project, time = 0, playing = false, fit = 'contain
   React.useEffect(() => { timeRef.current = time; }, [time]);
 
   React.useEffect(() => {
-    project.layers.forEach((l) => { if (l.media?.src) preloadImage(l.media.src); });
+    project.layers.forEach((l) => {
+      if (l.media?.src) preloadImage(l.media.src);
+      if (l.cutout?.src) preloadImage(l.cutout.src, () => renderRef.current?.(timeRef.current));
+    });
   }, [project.layers]);
 
   React.useEffect(() => {

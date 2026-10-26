@@ -57,28 +57,17 @@ function presetTrack(preset: AnimationPreset) {
 }
 
 function MotionThumb({ preset, playing }: { preset: AnimationPreset; playing: boolean }) {
-  const [tick, setTick] = React.useState(0);
-  React.useEffect(() => {
-    let cancelled = false;
-    let raf = 0;
-    let last = 0;
-    const loop = (now: number) => {
-      if (!cancelled && now - last > 40) { last = now; setTick((v) => v + 1); }
-      if (!cancelled) raf = requestAnimationFrame(loop);
-    };
-    raf = requestAnimationFrame(loop);
-    return () => { cancelled = true; cancelAnimationFrame(raf); };
-  }, []);
+  const tick = usePreviewClock();
   const track = React.useMemo(() => presetTrack(preset), [preset]);
-  const t = React.useMemo(() => {
+  const seconds = React.useMemo(() => {
     if (!playing) return Math.min(track.duration * 0.75, 0.6);
     const cycle = track.duration + 0.5;
-    return Math.max(0, Math.min(track.duration, (tick / 25) % cycle));
+    return Math.max(0, Math.min(track.duration, (tick / 20) % cycle));
   }, [tick, playing, track.duration]);
-  void tick;
+  const t = seconds;
 
   if (track.textAnimator) {
-    const p = playing ? Math.min(1, (tick / 25 / 1.4) % 1) : 0.55;
+    const p = playing ? Math.min(1, ((tick / 20) / 1.4) % 1) : 0.55;
     const letters = ['P', 'R', 'I', 'S', 'M'];
     return (
       <div className="relative grid h-full w-full place-items-center overflow-hidden bg-[radial-gradient(circle_at_30%_20%,rgba(139,92,246,.28),transparent_65%)]">
@@ -151,7 +140,6 @@ export function MotionPresetGrid({
   presets, onApply, disabled, columns = 3,
 }: { presets: AnimationPreset[]; onApply: (id: string) => void; disabled?: boolean; columns?: 2 | 3 }) {
   const [hovered, setHovered] = React.useState<string | null>(null);
-  void usePreviewClock();
   return (
     <div className={cn('grid gap-1.5', columns === 3 ? 'grid-cols-3' : 'grid-cols-2')} onMouseLeave={() => setHovered(null)}>
       {presets.map((p) => (
@@ -237,10 +225,14 @@ const FX_CLASS: Partial<Record<EffectType, string>> = {
   wiggle: 'pfx-wiggle', drift: 'pfx-drift', beatPulse: 'pfx-beatPulse',
 };
 
+/** Mount once per page/panel — the effect thumbnails share one stylesheet. */
+export function EffectPreviewStyles() {
+  return <style>{FX_CSS}</style>;
+}
+
 export function EffectThumb({ type }: { type: EffectType }) {
   return (
     <div className={cn('pfx-thumb aspect-[4/3] w-full', FX_CLASS[type])}>
-      <style>{FX_CSS}</style>
       <div className="pfx-scene" />
       <div className="pfx-subject" />
       <div className="pfx-bar" />

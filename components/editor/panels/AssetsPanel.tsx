@@ -370,23 +370,37 @@ function Lottie({ onAdd }: { onAdd: (kind: string) => void }) {
 
 function Fonts({ onPick }: { onPick: (font: string) => void }) {
   const [q, setQ] = React.useState('');
-  const filtered = FONTS.filter((f) => f.family.toLowerCase().includes(q.toLowerCase()) || f.category.toLowerCase().includes(q.toLowerCase()));
+  const [category, setCategory] = React.useState<string>('All');
+  const categories = React.useMemo(() => Array.from(new Set(FONTS.map((f) => f.category))), []);
+  const filtered = FONTS.filter((f) =>
+    (category === 'All' || f.category === category)
+    && (f.family.toLowerCase().includes(q.toLowerCase()) || f.category.toLowerCase().includes(q.toLowerCase())));
   return (
     <div>
-      <div className="relative mb-2">
+      <div className="relative mb-1.5">
         <Search className="absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground" />
-        <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search fonts" className="h-7 pl-7 text-[11px]" aria-label="Search fonts" />
+        <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={`Search ${FONTS.length} fonts`} className="h-7 pl-7 text-[11px]" aria-label="Search fonts" />
+      </div>
+      <div className="mb-2 flex flex-wrap gap-1">
+        {(['All', ...categories] as string[]).map((c) => (
+          <button key={c} onClick={() => setCategory(c)} className={cn('rounded-full border px-1.5 py-0.5 text-[9px] transition-colors',
+            category === c ? 'border-violet-400/50 bg-violet-500/15 text-violet-200' : 'border-border/60 text-muted-foreground hover:text-foreground')}>{c}</button>
+        ))}
       </div>
       <div className="space-y-1">
         {filtered.map((f) => (
-          <button key={f.family} onClick={() => onPick(f.family)} className="flex w-full items-center justify-between rounded-md border border-border/50 bg-background/30 px-2 py-1.5 text-left transition-colors hover:border-violet-500/40 hover:bg-accent/50">
-            <span className="truncate text-[14px]" style={{ fontFamily: `'${f.family}', Inter, sans-serif` }}>{f.family}</span>
-            <span className="ml-2 shrink-0 text-[8.5px] uppercase tracking-wider text-muted-foreground">{f.category}</span>
+          <button key={f.family} onClick={() => onPick(f.family)} className="flex w-full items-center justify-between gap-2 rounded-md border border-border/50 bg-background/30 px-2 py-1.5 text-left transition-colors hover:border-violet-500/40 hover:bg-accent/50">
+            <span className="min-w-0 truncate text-[14px]" style={{ fontFamily: `'${f.family}', Inter, sans-serif` }}>{f.family}</span>
+            <span className="flex shrink-0 items-center gap-1">
+              <span className="text-[8px] tabular-nums text-muted-foreground/70">{f.weights.length}w</span>
+              <span className="text-[8.5px] uppercase tracking-wider text-muted-foreground">{f.category}</span>
+            </span>
           </button>
         ))}
+        {filtered.length === 0 && <EmptyState icon={<Search className="h-4 w-4" />} title="No fonts match" description="Try a different name or style." />}
       </div>
       <div className="mt-3 flex items-start gap-1.5 rounded-md border border-border/60 bg-muted/20 px-2 py-1.5 text-[9px] leading-relaxed text-muted-foreground">
-        <Type className="mt-0.5 h-3 w-3 shrink-0" /> 19 Google Fonts load on demand. Upload custom fonts via Settings → Brand.
+        <Type className="mt-0.5 h-3 w-3 shrink-0" /> {FONTS.length} font families load on demand from Google Fonts. Upload custom fonts via Settings → Brand.
       </div>
       <div className="mt-2 flex items-center gap-1 text-[9px] text-muted-foreground"><Star className="h-2.5 w-2.5" /> Pixel-perfect on canvas export</div>
       <Kbd className="mt-2 inline-flex">tip: double-click text on canvas to edit</Kbd>

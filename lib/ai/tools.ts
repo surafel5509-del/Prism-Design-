@@ -772,7 +772,7 @@ export function createToolbelt(deps: ToolBeltDeps) {
     description: 'Add an effect: blur, glow, dropShadow, brightness, contrast, saturate, hue, grayscale, sepia, invert, chromatic, noise, grain, vignette, lightSweep, pixelate, bloom, displacement, scanlines. Amount 0–100.',
     parameters: z.object({
       layer: z.string().min(1),
-      effect: z.enum(['blur', 'glow', 'shadow', 'brightness', 'contrast', 'saturate', 'hue', 'grayscale', 'sepia', 'invert', 'chromatic', 'noise', 'grain', 'vignette', 'lightSweep', 'pixelate', 'bloom', 'dropShadow', 'displacement', 'scanlines']),
+      effect: z.enum(['blur', 'glow', 'shadow', 'brightness', 'contrast', 'saturate', 'hue', 'grayscale', 'sepia', 'invert', 'chromatic', 'noise', 'grain', 'vignette', 'lightSweep', 'pixelate', 'bloom', 'dropShadow', 'displacement', 'scanlines', 'duotone', 'hologram', 'vhs', 'halftone', 'spotlight', 'thermal', 'posterize', 'wiggle', 'drift', 'beatPulse']),
       amount: z.number().min(0).max(100).default(32),
       color: COLOR.optional(), radius: z.number().min(0).max(300).optional(), angle: z.number().optional(),
     }),

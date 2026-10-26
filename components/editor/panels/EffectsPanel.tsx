@@ -3,7 +3,7 @@ import * as React from 'react';
 import { useEditor } from '@/lib/store/editor';
 import type { Effect, EffectType } from '@/lib/engine/types';
 import { ANIMATION_PRESETS, applyPresetToLayer } from '@/lib/engine/presets';
-import { EffectThumb, MotionPresetGrid } from '@/components/editor/EffectPreviews';
+import { EffectPreviewStyles, EffectThumb, MotionPresetGrid } from '@/components/editor/EffectPreviews';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
@@ -78,6 +78,7 @@ export function EffectsPanel() {
 
   return (
     <div className="flex h-full flex-col">
+      <EffectPreviewStyles />
       <div className="border-b border-border/60 px-2 py-2">
         <p className="panel-title mb-1.5">Effect library</p>
         <div className="flex flex-wrap gap-1">

@@ -27,7 +27,20 @@ export function getImage(src: string): HTMLImageElement | null {
   return entry.loaded ? entry.img : null;
 }
 
-export function preloadImage(src: string) { getImage(src); }
+export function preloadImage(src: string, onLoad?: () => void) {
+  const existing = imageCache.get(src);
+  if (existing?.loaded) { onLoad?.(); return; }
+  getImage(src);
+  const entry = imageCache.get(src);
+  if (!entry) return;
+  if (entry.loaded) { onLoad?.(); return; }
+  const prev = entry.img.onload;
+  entry.img.onload = (ev) => {
+    if (typeof prev === 'function') (prev as (this: HTMLImageElement, ev: Event) => unknown).call(entry.img, ev);
+    onLoad?.();
+  };
+  if (entry.error) onLoad?.();
+}
 
 // ── Manual cut-out cache (painted alpha masks from the background remover) ───
 const cutoutCache = new Map<string, { canvas: HTMLCanvasElement; done: boolean }>();

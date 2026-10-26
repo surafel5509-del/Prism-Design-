@@ -29,7 +29,7 @@ and every export** apply identically. There is no parallel fake path.
   and ends with an inspectable run summary (steps, tools, tokens, cost, duration).
 - **BYO-AI**: 11 providers, AES-256-GCM encrypted at rest, server-side only, per-task routing, live model lists
   with curated fallback, real "Test connection".
-- **Stickers**: 200+ hand-drawn SVG stickers across 8 categories with instant search and colourways
+- **Stickers**: 300+ hand-drawn SVG stickers across 8 categories with instant search and colourways
 - **Studio**: dashboard with projects, 750+ templates (including 14 long-form 18–30 s motion families),
   brand kits, activity, share links with comments,
   and `/s/<id>` viewer.
@@ -94,7 +94,7 @@ with a precise message instead of pretending.
   text animators (typewriter, word reveal, char rise, count-up)
 - Images and video with cover/contain, crop/radius, motion presets (Ken Burns, parallax, reveal, kinetic, 2.5D)
 - Gradients (linear/radial/conic), procedural backgrounds (mesh, grain, waves, orb, grid, blob, spotlight, duotone)
-- 31 stackable effects, each with a live animated thumbnail in the browser: blur, bloom, glow, shadows,
+- 30 stackable effects, each with a live animated thumbnail in the browser: blur, bloom, glow, shadows,
   duotone, thermal, posterize, chromatic, grain, scanlines, halftone, hologram, VHS, light sweep, spotlight,
   pixelate, displace, wiggle, drift, beat pulse, …
 - Blend modes, opacity, guides, snapping, rulers, safe areas, grid, zoom to fit/selection, multi-select

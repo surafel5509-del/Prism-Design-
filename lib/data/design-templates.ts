@@ -257,7 +257,7 @@ let cache: TemplateDef[] | null = null;
 export function getDesignTemplates(): TemplateDef[] {
   if (cache) return cache;
   const out: TemplateDef[] = [];
-  FAMILIES.forEach((fam, fi) => {
+  FAMILIES.forEach((fam) => {
     fam.colorways.forEach((colors, ci) => {
       fam.aspects.forEach((aspect) => {
         const [w, h] = DIMS[aspect];
@@ -266,7 +266,7 @@ export function getDesignTemplates(): TemplateDef[] {
           id: `${fam.id}--${ci}--${aspect.replace(':', 'x')}`,
           name: ci ? `${fam.name} ${ci + 1}` : fam.name,
           category: fam.category,
-          tags: [...fam.tags, 'design', aspect, `${familiesIndex(fi)}`],
+          tags: [...fam.tags, 'design', 'static', aspect],
           aspect,
           duration: fam.duration,
           palette: colors,
@@ -289,5 +289,4 @@ export function getDesignTemplates(): TemplateDef[] {
   return out;
 }
 
-function familiesIndex(i: number) { return `family-${i + 1}`; }
 export const DESIGN_FAMILY_COUNT = FAMILIES.length;

@@ -7,6 +7,7 @@ import { resolveLayer } from '@/lib/engine/animation';
 import { EASING_PRESETS } from '@/lib/engine/easing';
 import { ANIMATION_PRESETS, applyPresetToLayer } from '@/lib/engine/presets';
 import { TEXT_EFFECTS, applyTextEffect } from '@/lib/engine/text-effects';
+import { MotionPresetGrid } from '@/components/editor/EffectPreviews';
 import { PALETTES } from '@/lib/engine/factory';
 import { FONTS } from '@/lib/data/library';
 import { ASPECTS } from '@/lib/engine/types';
@@ -513,7 +514,7 @@ function ShapeSection({ layer }: { layer: Layer }) {
   return (
     <Section title="Shape" defaultOpen={false}>
       <Select value={layer.shape ?? 'rect'} onChange={(e) => updateLayer(layer.id, { shape: e.target.value as ShapeKind })}>
-        {['rect', 'roundedRect', 'ellipse', 'polygon', 'star', 'triangle', 'diamond', 'hexagon', 'line', 'arrow'].map((s) => <option key={s} value={s}>{s}</option>)}
+        {['rect', 'roundedRect', 'ellipse', 'squircle', 'capsule', 'ring', 'polygon', 'triangle', 'pentagon', 'octagon', 'hexagon', 'diamond', 'star', 'burst', 'cross', 'chevron', 'parallelogram', 'trapezoid', 'halfCircle', 'quarterCircle', 'heart', 'cloud', 'wave', 'pillArrow', 'line', 'arrow'].map((s) => <option key={s} value={s}>{s}</option>)}
       </Select>
       {(layer.shape === 'polygon' || layer.shape === 'star') && <NumberField label="Points" value={layer.points ?? 5} onChange={(v) => updateLayer(layer.id, { points: Math.round(clamp(v, 3, 30)) })} min={3} max={30} />}
       {layer.shape === 'star' && <NumberField label="Inner" value={layer.innerRadius ?? 0.45} onChange={(v) => updateLayer(layer.id, { innerRadius: clamp(v, 0.05, 0.95) })} step={0.01} min={0.05} max={0.95} />}
@@ -592,12 +593,15 @@ function AnimatePanel({ layer }: { layer: Layer }) {
       </Section>
 
       <Section title="Presets">
-        <div className="grid grid-cols-2 gap-1">
-          {ANIMATION_PRESETS.filter((p) => p.group === 'In' || p.group === 'Loop').map((p) => (
-            <button key={p.id} onClick={() => { const { keyframes, text } = applyPresetToLayer(layer, p.id, duration); updateLayer(layer.id, { keyframes, ...(text ? { text } : {}) }); toast.success(`${p.name} applied`); }}
-              className="rounded border border-border/60 px-1 py-1 text-[9px] text-muted-foreground transition-colors hover:border-violet-500/40 hover:text-violet-300">{p.icon} {p.name}</button>
-          ))}
-        </div>
+        <MotionPresetGrid
+          presets={ANIMATION_PRESETS.filter((p) => p.group === 'In' || p.group === 'Loop')}
+          onApply={(id) => {
+            const { keyframes, text } = applyPresetToLayer(layer, id, duration);
+            updateLayer(layer.id, { keyframes, ...(text ? { text } : {}) });
+            toast.success(`${ANIMATION_PRESETS.find((p) => p.id === id)?.name ?? 'Preset'} applied`);
+          }}
+          columns={2}
+        />
       </Section>
 
       <div className="rounded-md border border-border/50 bg-muted/20 p-2 text-[9px] leading-relaxed text-muted-foreground">
